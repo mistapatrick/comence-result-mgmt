@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Comence Results Portal</title>
+<link rel="icon" href="logo.png">
+<style>
+:root{--bg:#f3f4f7;--card:#fff;--tx:#18233a;--mu:#5b667a;--bd:#d6dbe5;--ink:#1c2b4a;--onink:#fff;--gold:#c8891a;--ok:#1b7a43;--bad:#b3261e;--in:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151f;--card:#18202e;--tx:#e8edf5;--mu:#98a3b6;--bd:#2c3748;--ink:#8fb0ee;--onink:#0b1424;--gold:#e0a63a;--ok:#4cc27f;--bad:#ff8f86;--in:#111826}}
+:root[data-theme="dark"]{--bg:#10151f;--card:#18202e;--tx:#e8edf5;--mu:#98a3b6;--bd:#2c3748;--ink:#8fb0ee;--onink:#0b1424;--gold:#e0a63a;--ok:#4cc27f;--bad:#ff8f86;--in:#111826}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header.top{background:var(--ink);color:var(--onink);padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header.top img{height:44px;width:44px;background:#fff;border-radius:6px;padding:2px}
+header.top b{flex:1;min-width:180px}
+header.top button{color:var(--onink);border-color:var(--onink);background:transparent;min-height:36px}
+main{max-width:1000px;margin:0 auto;padding:16px}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+nav.tabs button.on{background:var(--ink);color:var(--onink)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:16px;margin-bottom:16px}
+h2{margin:0 0 12px;font-size:20px}h3{margin:0 0 8px;font-size:16px}
+label{display:block;font-size:14px;color:var(--mu);margin:8px 0 4px}
+input,select,textarea,button{font:inherit;color:var(--tx)}
+input,select,textarea{width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--in)}
+input[type=checkbox]{width:22px;min-height:22px}
+input.bad{border-color:var(--bad);outline:2px solid var(--bad)}
+button{min-height:44px;padding:8px 14px;border-radius:6px;border:1px solid var(--ink);background:var(--card);cursor:pointer}
+button.p{background:var(--ink);color:var(--onink)}button:disabled,input:disabled{opacity:.55;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--gold);outline-offset:1px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}.row>*{flex:1;min-width:150px}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--bd);padding:6px 8px;text-align:left;font-size:15px;vertical-align:middle}
+td input.sc{width:84px}
+.msg{padding:10px 14px;border-radius:6px;border:1px solid var(--gold);margin-bottom:16px}.msg.bad{border-color:var(--bad);color:var(--bad)}
+.pin{font:700 26px/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:3px}
+.ok{color:var(--ok)}.no{color:var(--bad)}.mu{color:var(--mu);font-size:14px}
+.pup{border-top:1px solid var(--bd);padding-top:12px;margin-top:12px}
+.rc{background:#fff;color:#111;font-family:Georgia,"Times New Roman",serif;padding:22px;border:2px solid #1c2b4a;margin-bottom:20px}
+.rc .hd{display:flex;gap:14px;align-items:center;justify-content:center;text-align:center;flex-wrap:wrap}
+.rc .hd img{height:84px}.rc h1{margin:0;font-size:22px;color:#1c2b4a}.rc .ad{font-size:13px}
+.rc .sub{text-align:center;margin:10px 0;font-weight:700}
+.rc table th,.rc table td{border:1px solid #888;color:#111;font-size:14px}.rc th{background:#e8ecf4}
+.rc .meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-bottom:12px}
+.rc .pos{font-weight:700;color:#8a5a00}.sig{display:flex;gap:24px;margin-top:34px}.sig div{flex:1;border-top:1px solid #111;padding-top:4px;font-size:13px}
+.foot{text-align:center;color:var(--mu);font-size:13px;padding:8px 16px 24px}
+@media print{.noprint,header.top,.foot{display:none!important}body{background:#fff}main{padding:0;max-width:none}.rc{border:none;page-break-after:always;margin:0}}
+</style>
+</head>
+<body>
+<header class="top"><img src="logo.png" alt="Comence logo"><b>Comence Nursery &amp; Primary School · Results Portal</b><span id="who"></span></header>
+<main id="app"></main>
+<div class="foot" id="foot"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+const C=window.APP_CONFIG,sb=supabase.createClient(C.SUPABASE_URL,C.SUPABASE_ANON_KEY);
+const $=s=>document.querySelector(s),app=$('#app');
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const NURSERY=['Playgroup','Pre-Nursery','Nursery 1'],LEVELS=['Playgroup','Pre-Nursery','Nursery 1','Primary 1','Primary 2','Primary 3','Primary 4','Primary 5','Primary 6'];
+const sectionOf=l=>NURSERY.includes(l)?'Nursery':'Primary';
+const GR=[[90,'A'],[70,'B+'],[60,'B'],[50,'C'],[40,'D'],[0,'E']],grade=t=>GR.find(g=>t>=g[0])[1];
+const BEH=['Neatness','Punctuality','Attentiveness','Politeness'],RATE=['','Excellent','Good','Fair','Poor'];
+const ord=n=>{const v=n%100,s=['th','st','nd','rd'];return n+(s[(v-20)%10]||s[v]||'th')};
+const fdate=d=>d?new Date(d+'T00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'';
+const naira=n=>'₦'+Number(n||0).toLocaleString('en-NG');
+const opts=(arr,sel)=>arr.map(x=>`<option value="${esc(x.v)}" ${x.v===sel?'selected':''}>${esc(x.t)}</option>`).join('');
+let ME=null,S={view:'login',tab:'',msg:'',bad:false},D={},T={};
+async function q(p){const r=await p;if(r.error){S.msg=r.error.message;S.bad=true;render();throw r.error}return r.data}
+const flash=(m,bad)=>{S.msg=m;S.bad=!!bad;render();window.scrollTo(0,0)};
+
+/* ---------- loading ---------- */
+async function loadClass(cid,sid,level){
+ const pupils=await q(sb.from('pupils').select('*').eq('class_id',cid).eq('active',true).order('full_name'));
+ const subjects=await q(sb.from('subjects').select('*').eq('section',sectionOf(level)).eq('active',true).order('sort'));
+ const ids=pupils.map(p=>p.id);let en=[],sc=[],rm=[];
+ if(ids.length)[en,sc,rm]=await Promise.all([q(sb.from('pupil_subjects').select('*').eq('session_id',sid).in('pupil_id',ids)),q(sb.from('scores').select('*').eq('session_id',sid).in('pupil_id',ids)),q(sb.from('remarks').select('*').eq('session_id',sid).in('pupil_id',ids))]);
+ const sub=(await sb.from('submissions').select('*').eq('class_id',cid).eq('session_id',sid).maybeSingle()).data;
+ const E={},Sc={},R={};en.forEach(x=>E[x.pupil_id+'|'+x.subject_id]=1);sc.forEach(x=>Sc[x.pupil_id+'|'+x.subject_id]={ca:x.ca,exam:x.exam});rm.forEach(x=>R[x.pupil_id]=x);
+ return{pupils,subjects,E,Sc,R,sub,level};
+}
+function pstat(d,p,resume){
+ const subs=d.subjects.filter(s=>d.E[p.id+'|'+s.id]),done=subs.filter(s=>{const v=d.Sc[p.id+'|'+s.id]||{};return v.ca!=null&&v.exam!=null}).length,r=d.R[p.id]||{},m=[];
+ if(!subs.length)m.push('no subjects selected');else if(done<subs.length)m.push('scores incomplete ('+done+'/'+subs.length+')');
+ if(!r.teacher_remark)m.push('class teacher’s remark');if(!r.head_remark)m.push('head teacher’s remark');
+ if(r.fees_outstanding==null)m.push('fees outstanding');if(!resume)m.push('resumption date');
+ return{subs:subs.length,done,miss:m};
+}
+async function tInit(){
+ D.sessions=await q(sb.from('sessions').select('*').order('year',{ascending:false}).order('term'));
+ const cl=await q(sb.from('classes').select('*').eq('teacher_id',ME.id));D.my=cl[0]||null;
+ T.sid=(D.sessions.find(x=>x.id===localStorage.getItem('sid'))||D.sessions[0]||{}).id;
+ if(D.my&&T.sid)T.d=await loadClass(D.my.id,T.sid,D.my.level);
+}
+async function aInit(){
+ D.sessions=await q(sb.from('sessions').select('*').order('year',{ascending:false}).order('term'));
+ D.classes=await q(sb.from('classes').select('*'));D.classes.sort((a,b)=>LEVELS.indexOf(a.level)-LEVELS.indexOf(b.level)||a.arm.localeCompare(b.arm));
+ D.profiles=await q(sb.from('profiles').select('*').order('full_name'));
+ D.allsub=await q(sb.from('subjects').select('*').order('sort'));
+ S.asid=S.asid||(D.sessions[0]||{}).id;S.acls=S.acls||(D.classes[0]||{}).id;await aLoad();
+}
+async function aLoad(){const c=D.classes.find(x=>x.id===S.acls);D.a=(c&&S.asid)?await loadClass(c.id,S.asid,c.level):null}
+async function boot(){
+ const {data:{session}}=await sb.auth.getSession();
+ if(!session){S.view=location.hash==='#parent'?'parent':'login';return render()}
+ const p=await q(sb.from('profiles').select('*').eq('id',session.user.id).single());ME=p;
+ if(p.role==='admin'){S.view='admin';S.tab='reports';await aInit()}else{S.view='teacher';S.tab='setup';await tInit()}
+ render();
+}
+
+/* ---------- report card (used by admin, print-all and parent) ---------- */
+function reportHTML(r){
+ const b=r.behaviour||{},hasB=BEH.some(k=>b[k]);
+ return`<div class="rc"><div class="hd"><img src="logo.png" alt=""><div><h1>${esc(C.SCHOOL)}</h1><div class="ad">${esc(C.ADDRESS)}<br>Call/WhatsApp ${esc(C.PHONE)} · ${esc(C.EMAIL)}</div></div></div>
+ <div class="sub">TERMINAL REPORT CARD · ${esc(r.term)}, ${esc(r.session)}</div>
+ <div class="meta"><div><b>Name:</b> ${esc(r.name)}</div><div><b>Admission No:</b> ${esc(r.admission_no)}</div><div><b>Class:</b> ${esc(r.class)}</div>
+ <div><b>Position:</b> <span class="pos">${r.position?ord(r.position)+' of '+r.class_size:'–'}</span></div></div>
+ <div class="scroll"><table><tr><th>Subject</th><th>CA (40)</th><th>Exam (60)</th><th>Total (100)</th><th>Grade</th></tr>
+ ${r.rows.map(x=>`<tr><td>${esc(x.subject)}</td><td>${x.ca}</td><td>${x.exam}</td><td>${x.total}</td><td>${esc(x.grade)}</td></tr>`).join('')}
+ <tr><th colspan="3">Grand total (out of ${r.rows.length*100})</th><th>${r.grand_total}</th><th>${esc(r.average_grade)}</th></tr></table></div>
+ <p>Average: <b>${r.average}</b> · Key: A 90–100, B+ 70–89, B 60–69, C 50–59, D 40–49, E 0–39</p>
+ ${r.days_open?`<p>Attendance: <b>${esc(r.days_present||0)}</b> of <b>${esc(r.days_open)}</b> days</p>`:''}
+ ${hasB?`<p>${BEH.filter(k=>b[k]).map(k=>k+': <b>'+esc(b[k])+'</b>').join(' · ')}</p>`:''}
+ <p><b>Class teacher’s remark:</b> ${esc(r.teacher_remark)}</p><p><b>Head teacher’s remark:</b> ${esc(r.head_remark)}</p>
+ <p><b>Fees outstanding:</b> ${naira(r.fees_outstanding)} · <b>Next term begins:</b> ${fdate(r.resume_date)}</p>
+ <div class="sig"><div>Class teacher’s signature</div><div>Head teacher’s signature</div></div></div>`;
+}
+
+/* ---------- views ---------- */
+const tabs=(list)=>`<nav class="tabs noprint">${list.map(([k,t])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-t="${k}">${t}</button>`).join('')}</nav>`;
+function vLogin(){return`<div class="card" style="max-width:440px;margin:0 auto"><h2>Staff login</h2>
+<label for="e">Email</label><input id="e" type="email" autocomplete="username"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password">
+<p><button class="p" data-act="login">Log in</button></p><p class="mu">Forgot your password? Ask the admin to reset it. Technical problems: call ${esc(C.TECH_SUPPORT)}.</p></div>
+<div class="card" style="max-width:440px;margin:0 auto"><h3>Parents</h3><p>Use the admission number and PIN given by the school.</p><button data-act="toparent">Open parent portal</button></div>`}
+function vParent(){return`<div class="card" style="max-width:440px;margin:0 auto"><h2>Parent report access</h2>
+<label for="pa">Admission number</label><input id="pa" placeholder="e.g. CNP/26/0001" autocapitalize="characters"><label for="pp">PIN</label><input id="pp" autocapitalize="characters" autocomplete="off">
+<p><button class="p" data-act="parentgo">View report</button> <button data-act="logout">Back</button></p>
+<p class="mu">Need help? Call/WhatsApp ${esc(C.PHONE)} or email ${esc(C.EMAIL)}.<br>${esc(C.ADDRESS)}</p></div>`}
+function vReport(){return`<div class="noprint"><p><button data-act="back">Back</button> <button class="p" data-act="print">Print or save as PDF</button></p>${S.exp?`<p class="mu">Please download or print this report before ${new Date(S.exp).toLocaleDateString('en-GB')}. After that it can no longer be opened.</p>`:''}</div>${S.reps.map(reportHTML).join('')}`}
+
+/* teacher */
+function locked(){return T.d&&T.d.sub&&T.d.sub.status!=='draft'}
+function vTeacher(){
+ const t=[['setup','1 Class & term'],['pupils','2 Pupils'],['subjects','3 Subjects taken'],['scores','4 Scores'],['remarks','5 Remarks'],['submit','6 Submit']];
+ return tabs(t)+({setup:tSetup,pupils:tPupils,subjects:tSubjects,scores:tScores,remarks:tRemarks,submit:tSubmit}[S.tab]||tSetup)();
+}
+function needSetup(){return !D.my||!T.d?'<div class="card">Please complete step 1 first.</div>':''}
+function tSetup(){
+ const ses=D.sessions.find(x=>x.id===T.sid)||{};
+ return`<div class="card"><h2>Your class</h2>${D.my?`<p><b>${esc(D.my.level)} ${esc(D.my.arm)}</b> (${sectionOf(D.my.level)} section)</p><p class="mu">To change your class, ask the admin.</p>`
+ :`<div class="row"><div><label for="lv">Class</label><select id="lv">${opts(LEVELS.map(x=>({v:x,t:x})))}</select></div><div><label for="ar">Arm</label><select id="ar"><option>A</option><option>B</option></select></div>
+ <div><button class="p" data-act="claim">Set as my class</button></div></div>`}</div>
+ <div class="card"><h2>Session and term</h2><div class="row"><div><label for="sy">Session (e.g. 2026/2027)</label><input id="sy" value="${esc(ses.year||'2026/2027')}"></div>
+ <div><label for="tm">Term</label><select id="tm">${opts(['1st Term','2nd Term','3rd Term'].map(x=>({v:x,t:x})),ses.term)}</select></div>
+ <div><button class="p" data-act="setterm">Use this term</button></div></div><p class="mu">Working on: <b>${esc(ses.term||'')} ${esc(ses.year||'')}</b>${locked()?' · <span class="no">submitted, locked</span>':''}</p></div>`;
+}
+function tPupils(){if(needSetup())return needSetup();const d=T.d;
+ return`<div class="card"><h2>Pupils in ${esc(D.my.level)} ${esc(D.my.arm)} (${d.pupils.length})</h2>
+ <label for="nm">Add pupils: type or paste one full name per line</label><textarea id="nm" rows="5" placeholder="Aisha Bello&#10;Musa Danjuma"></textarea>
+ <p><button class="p" data-act="addpupils">Add pupils</button></p>
+ <div class="scroll"><table>${d.pupils.map((p,i)=>`<tr><td>${i+1}</td><td>${esc(p.full_name)}</td><td class="mu">${esc(p.admission_no)}</td><td><button data-act="rmpupil" data-id="${p.id}">Remove</button></td></tr>`).join('')}</table></div></div>`}
+function tSubjects(){if(needSetup())return needSetup();const d=T.d,L=locked();
+ return`<div class="card"><h2>Subjects each pupil took</h2><p class="mu">Tick the subjects every pupil offered this term. Scores can only be entered for ticked subjects.</p>
+ <div class="scroll"><table><tr><th>Pupil</th>${d.subjects.map(s=>`<th style="min-width:90px;font-size:13px">${esc(s.name)}<br><button data-act="allsub" data-s="${s.id}" ${L?'disabled':''} style="min-height:30px;font-size:12px">All</button></th>`).join('')}</tr>
+ ${d.pupils.map(p=>`<tr><td>${esc(p.full_name)}</td>${d.subjects.map(s=>`<td><input type="checkbox" data-ch="enrol" data-p="${p.id}" data-s="${s.id}" ${d.E[p.id+'|'+s.id]?'checked':''} ${L?'disabled':''} aria-label="${esc(p.full_name)} ${esc(s.name)}"></td>`).join('')}</tr>`).join('')}</table></div></div>`}
+function tScores(){if(needSetup())return needSetup();const d=T.d,L=locked();T.subj=T.subj||(d.subjects[0]||{}).id;
+ const ps=d.pupils.filter(p=>d.E[p.id+'|'+T.subj]);
+ return`<div class="card"><h2>Score entry</h2><div class="row"><div><label for="sj">Subject</label><select id="sj" data-ch="subj">${opts(d.subjects.map(s=>({v:s.id,t:s.name})),T.subj)}</select></div>
+ <div><p class="mu">CA 0–40 · Exam 0–60 · saves as you type <b id="st"></b>${L?'<br><span class="no">Locked: results submitted.</span>':''}</p></div></div>
+ ${ps.length?`<div class="scroll"><table><tr><th>Pupil</th><th>CA /40</th><th>Exam /60</th><th>Total</th><th>Grade</th></tr>${ps.map(p=>{const v=d.Sc[p.id+'|'+T.subj]||{},ok=v.ca!=null&&v.exam!=null;
+ return`<tr><td>${esc(p.full_name)}</td><td><input class="sc" type="number" inputmode="numeric" min="0" max="40" data-in="score" data-p="${p.id}" data-f="ca" value="${v.ca==null?'':v.ca}" ${L?'disabled':''} aria-label="CA ${esc(p.full_name)}"></td>
+ <td><input class="sc" type="number" inputmode="numeric" min="0" max="60" data-in="score" data-p="${p.id}" data-f="exam" value="${v.exam==null?'':v.exam}" ${L?'disabled':''} aria-label="Exam ${esc(p.full_name)}"></td><td class="tot">${ok?v.ca+v.exam:'–'}</td><td class="gr">${ok?grade(v.ca+v.exam):'–'}</td></tr>`}).join('')}</table></div>`:'<p class="mu">No pupil has this subject ticked yet (step 3).</p>'}</div>`}
+function tRemarks(){if(needSetup())return needSetup();const d=T.d,L=locked();
+ return`<div class="card"><h2>Class teacher’s remarks</h2><p class="mu">Remarks are compulsory. Attendance and behaviour are optional. The head teacher’s remark and fees are added by the admin.</p>
+ ${d.pupils.map(p=>{const r=d.R[p.id]||{},b=r.behaviour||{};return`<div class="pup"><b>${esc(p.full_name)}</b>
+ <label>Class teacher’s remark</label><input data-in="rem" data-p="${p.id}" data-f="teacher_remark" value="${esc(r.teacher_remark)}" ${L?'disabled':''}>
+ <div class="row"><div><label>Days present (optional)</label><input type="number" min="0" data-in="rem" data-p="${p.id}" data-f="days_present" value="${r.days_present==null?'':r.days_present}" ${L?'disabled':''}></div>
+ <div><label>Days school opened (optional)</label><input type="number" min="0" data-in="rem" data-p="${p.id}" data-f="days_open" value="${r.days_open==null?'':r.days_open}" ${L?'disabled':''}></div></div>
+ <div class="row">${BEH.map(k=>`<div><label>${k} (optional)</label><select data-ch="beh" data-p="${p.id}" data-k="${k}" ${L?'disabled':''}>${opts(RATE.map(x=>({v:x,t:x||'–'})),b[k]||'')}</select></div>`).join('')}</div></div>`}).join('')}</div>`}
+function tSubmit(){if(needSetup())return needSetup();const d=T.d,L=locked();
+ const rows=d.pupils.map(p=>({p,s:pstat(d,p,true)})),bad=rows.filter(x=>x.s.miss.some(m=>!/head|fees/.test(m)));
+ return`<div class="card"><h2>Submit results to admin</h2>${L?`<p class="ok"><b>Submitted.</b> Only the admin can unlock it for corrections.</p>`:
+ `${bad.length?`<p class="no">Not ready yet:</p><ul>${bad.map(x=>`<li>${esc(x.p.full_name)}: ${esc(x.s.miss.filter(m=>!/head|fees/.test(m)).join(', '))}</li>`).join('')}</ul>`:'<p class="ok">All pupils are complete.</p>'}
+ <p><button class="p" data-act="submit" ${bad.length||!d.pupils.length?'disabled':''}>Submit class results</button></p><p class="mu">After submitting you cannot edit unless the admin unlocks.</p>`}</div>`}
+
+/* admin */
+function vAdmin(){
+ const t=[['reports','Reports & PINs'],['subjects','Subjects'],['teachers','Teachers & classes'],['terms','Terms']];
+ return tabs(t)+({reports:aReports,subjects:aSubjects,teachers:aTeachers,terms:aTerms}[S.tab]||aReports)();
+}
+function aReports(){const d=D.a,ses=D.sessions.find(x=>x.id===S.asid)||{};
+ const head=`<div class="card"><h2>Reports</h2><div class="row"><div><label for="as">Session and term</label><select id="as" data-ch="asid">${opts(D.sessions.map(x=>({v:x.id,t:x.term+' '+x.year})),S.asid)}</select></div>
+ <div><label for="ac">Class</label><select id="ac" data-ch="acls">${opts(D.classes.map(x=>({v:x.id,t:x.level+' '+x.arm+(x.teacher_id?'':' (no teacher)')})),S.acls)}</select></div></div></div>`;
+ if(!d)return head;
+ const rows=d.pupils.map(p=>({p,s:pstat(d,p,ses.resume_date)})),ready=rows.filter(x=>!x.s.miss.length);
+ return head+`<div class="card"><h3>${d.sub&&d.sub.status!=='draft'?'<span class="ok">Teacher has submitted</span> <button data-act="unlock">Unlock for corrections</button>':'<span class="mu">Teacher has not submitted yet</span>'}</h3>
+ <p class="mu">Next term begins: ${ses.resume_date?fdate(ses.resume_date):'<span class="no">not set (Terms tab)</span>'} · ${ready.length} of ${rows.length} pupils ready</p>
+ <p><button data-act="printall" ${ready.length?'':'disabled'}>Print all ready reports (${ready.length})</button></p>
+ ${rows.map(({p,s})=>{const r=d.R[p.id]||{};return`<div class="pup"><b>${esc(p.full_name)}</b> <span class="mu">${esc(p.admission_no)} · class teacher’s remark: ${r.teacher_remark?'✓':'–'} · scores ${s.done}/${s.subs}</span>
+ <div class="row"><div><label>Head teacher’s remark</label><input data-in="arem" data-p="${p.id}" data-f="head_remark" value="${esc(r.head_remark)}"></div>
+ <div><label>Fees outstanding (₦, 0 if none)</label><input type="number" min="0" data-in="arem" data-p="${p.id}" data-f="fees_outstanding" value="${r.fees_outstanding==null?'':r.fees_outstanding}"></div>
+ <div><label>Parent email (optional)</label><input type="email" data-in="pmail" data-p="${p.id}" value="${esc(p.parent_email)}"></div></div>
+ ${s.miss.length?`<p class="mu">Still needed: ${esc(s.miss.join(', '))}.</p>`:'<p class="ok">Ready to issue.</p>'}
+ <div class="row"><div><button data-act="viewrep" data-id="${p.id}" ${s.miss.length?'disabled':''}>View / print report</button></div>
+ <div><label>PIN valid for</label><select id="d${p.id}"><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option><option value="45" selected>45 days</option></select></div>
+ <div><button class="p" data-act="pin" data-id="${p.id}" ${s.miss.length?'disabled':''}>Generate PIN</button></div></div>
+ ${S.pin&&S.pin.id===p.id?`<p>PIN for ${esc(p.full_name)}: <span class="pin">${esc(S.pin.pin)}</span><br><span class="mu">Shown once. Admission number ${esc(p.admission_no)}. Valid until ${new Date(S.pin.exp).toLocaleDateString('en-GB')}.</span><br>
+ ${p.parent_email?`<a href="${esc(mailto(p))}">Email this to the parent</a>`:'<span class="mu">Add a parent email above to send by email, or give it to the parent on paper/WhatsApp.</span>'}</p>`:''}</div>`}).join('')}</div>`}
+function mailto(p){const body=`Dear Parent,\n\n${p.full_name}'s ${(D.sessions.find(x=>x.id===S.asid)||{}).term||''} report is ready.\n\nOpen ${location.origin}/#parent\nAdmission number: ${p.admission_no}\nPIN: ${S.pin.pin}\n\nPlease download it before ${new Date(S.pin.exp).toLocaleDateString('en-GB')}.\n\n${C.SCHOOL}\nCall/WhatsApp ${C.PHONE}`;
+ return`mailto:${p.parent_email}?subject=${encodeURIComponent(p.full_name+' - Terminal Report')}&body=${encodeURIComponent(body)}`}
+function aSubjects(){return['Nursery','Primary'].map(sec=>`<div class="card"><h2>${sec} subjects</h2><div class="scroll"><table>${D.allsub.filter(s=>s.section===sec).map(s=>`<tr><td><input data-ch="subname" data-id="${s.id}" value="${esc(s.name)}"></td>
+ <td><label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" data-ch="subact" data-id="${s.id}" ${s.active?'checked':''}> In use</label></td></tr>`).join('')}</table></div>
+ <div class="row"><div><label>Add a ${sec.toLowerCase()} subject</label><input id="ns${sec}"></div><div><button class="p" data-act="addsub" data-sec="${sec}">Add subject</button></div></div>
+ <p class="mu">Subjects are switched off, not deleted, so old results stay safe.</p></div>`).join('')}
+function aTeachers(){const tch=D.profiles.filter(p=>p.role==='teacher');
+ return`<div class="card"><h2>Create a teacher login</h2><div class="row"><div><label>Full name</label><input id="tn"></div><div><label>Email</label><input id="te" type="email"></div>
+ <div><label>Starting password (8+ characters)</label><input id="tp" type="text"></div><div><button class="p" data-act="mkteacher">Create login</button></div></div>
+ <p class="mu">Give the teacher the email and password. They can change it from the top bar after logging in.</p></div>
+ <div class="card"><h2>Class teachers</h2><div class="scroll"><table><tr><th>Class</th><th>Teacher</th></tr>${D.classes.map(c=>`<tr><td>${esc(c.level)} ${esc(c.arm)}</td><td><select data-ch="assign" data-id="${c.id}"><option value="">– none –</option>${opts(tch.map(p=>({v:p.id,t:p.full_name})),c.teacher_id||'')}</select></td></tr>`).join('')}</table></div></div>
+ <div class="card"><h2>Reset a teacher’s password</h2><div class="row"><div><label>Teacher</label><select id="rt">${opts(tch.map(p=>({v:p.id,t:p.full_name+' ('+p.email+')'})))}</select></div>
+ <div><label>New password (8+ characters)</label><input id="rp" type="text"></div><div><button data-act="resetpw">Reset password</button></div></div></div>`}
+function aTerms(){return`<div class="card"><h2>Terms</h2><div class="scroll"><table><tr><th>Term</th><th>Next term begins</th></tr>${D.sessions.map(s=>`<tr><td>${esc(s.term)} ${esc(s.year)}</td><td><input type="date" data-ch="resume" data-id="${s.id}" value="${esc(s.resume_date)}"></td></tr>`).join('')}</table></div>
+ <div class="row"><div><label>New session</label><input id="ny" placeholder="2027/2028"></div><div><label>Term</label><select id="nt"><option>1st Term</option><option>2nd Term</option><option>3rd Term</option></select></div><div><button class="p" data-act="addterm">Add term</button></div></div>
+ <p class="mu">Teachers can also start a term from step 1. The resumption date is compulsory on every report card.</p></div>`}
+
+function render(){
+ $('#who').innerHTML=ME?`${esc(ME.full_name)} (${ME.role}) <button data-act="pw">Change password</button> <button data-act="logout">Log out</button>`:'';
+ $('#foot').innerHTML=ME?`Technical problem? Call ${esc(C.TECH_SUPPORT)} (school and teachers only).`:'';
+ const v={login:vLogin,parent:vParent,report:vReport,teacher:vTeacher,admin:vAdmin}[S.view];
+ app.innerHTML=(S.msg?`<div class="msg noprint ${S.bad?'bad':''}" role="status">${esc(S.msg)}</div>`:'')+v();
+}
+
+/* ---------- actions ---------- */
+const val=id=>$('#'+id).value.trim();
+async function reload(){if(ME.role==='admin')await aLoad();else await tInit()}
+const ACT={
+ async login(){const {error}=await sb.auth.signInWithPassword({email:val('e'),password:$('#pw').value});if(error)return flash('Login failed: '+error.message,true);S.msg='';await boot()},
+ async logout(){await sb.auth.signOut();ME=null;D={};T={};S={view:'login',msg:''};render()},
+ toparent(){S.view='parent';S.msg='';render()},
+ tab(b){S.tab=b.dataset.t;S.msg='';render()},
+ async pw(){const p=prompt('Type your new password (8 or more characters):');if(!p)return;if(p.length<8)return flash('Password must be at least 8 characters.',true);const {error}=await sb.auth.updateUser({password:p});flash(error?error.message:'Password changed.',!!error)},
+ async claim(){await q(sb.rpc('claim_class',{lvl:val('lv'),a:val('ar')}));await tInit();flash('Class set.')},
+ async setterm(){const id=await q(sb.rpc('ensure_session',{y:val('sy'),t:val('tm')}));localStorage.setItem('sid',id);await tInit();flash('Term set.')},
+ async addpupils(){const names=$('#nm').value.split('\n').map(x=>x.trim()).filter(Boolean);if(!names.length)return;
+  await q(sb.from('pupils').insert(names.map(n=>({full_name:n,class_id:D.my.id}))));await tInit();flash(names.length+' pupil(s) added.')},
+ async rmpupil(b){if(!confirm('Remove this pupil from the class list?'))return;await q(sb.from('pupils').update({active:false}).eq('id',b.dataset.id));await tInit();render()},
+ async allsub(b){const s=b.dataset.s,rows=T.d.pupils.filter(p=>!T.d.E[p.id+'|'+s]).map(p=>({pupil_id:p.id,subject_id:s,session_id:T.sid}));
+  if(rows.length)await q(sb.from('pupil_subjects').insert(rows));await tInit();render()},
+ async submit(){if(!confirm('Submit results to the admin? You will not be able to edit afterwards.'))return;await q(sb.rpc('submit_class',{c:D.my.id,s:T.sid}));await tInit();flash('Results submitted to admin.')},
+ async unlock(){await q(sb.from('submissions').update({status:'draft'}).eq('class_id',S.acls).eq('session_id',S.asid));await aLoad();flash('Unlocked. The teacher can edit again.')},
+ async viewrep(b){const r=await q(sb.rpc('admin_report',{p:b.dataset.id,s:S.asid}));S.reps=[r];S.exp=null;S.from='admin';S.view='report';render()},
+ async printall(){const d=D.a,ses=D.sessions.find(x=>x.id===S.asid);const ids=d.pupils.filter(p=>!pstat(d,p,ses.resume_date).miss.length).map(p=>p.id);
+  S.reps=await Promise.all(ids.map(id=>q(sb.rpc('admin_report',{p:id,s:S.asid}))));S.exp=null;S.from='admin';S.view='report';render()},
+ async pin(b){const id=b.dataset.id,days=Number($('#d'+id).value),pin=await q(sb.rpc('issue_pin',{p:id,s:S.asid,days}));S.pin={id,pin,exp:Date.now()+days*864e5};render()},
+ async parentgo(){const r=await q(sb.rpc('parent_report',{adm:val('pa'),pin:val('pp')}));if(!r.ok)return flash(r.error,true);S.reps=[r.report];S.exp=r.expires_at;S.from='parent';S.view='report';S.msg='';render()},
+ back(){S.view=S.from==='parent'?'parent':'admin';render()},
+ print(){window.print()},
+ async addsub(b){const sec=b.dataset.sec,n=val('ns'+sec);if(!n)return;const mx=Math.max(0,...D.allsub.filter(s=>s.section===sec).map(s=>s.sort));
+  await q(sb.from('subjects').insert({section:sec,name:n,sort:mx+1}));await aInit();flash('Subject added.')},
+ async mkteacher(){try{await api({action:'create',full_name:val('tn'),email:val('te'),password:val('tp')});await aInit();flash('Teacher login created.')}catch(e){flash(e.message,true)}},
+ async resetpw(){try{await api({action:'reset',user_id:val('rt'),password:val('rp')});flash('Password reset. Give the teacher the new password.')}catch(e){flash(e.message,true)}},
+ async addterm(){const y=val('ny');if(!y)return;await q(sb.rpc('ensure_session',{y,t:val('nt')}));await aInit();flash('Term added.')}
+};
+const CH={
+ async enrol(t){if(t.checked)await q(sb.from('pupil_subjects').insert({pupil_id:t.dataset.p,subject_id:t.dataset.s,session_id:T.sid}));
+  else{await q(sb.from('scores').delete().eq('pupil_id',t.dataset.p).eq('subject_id',t.dataset.s).eq('session_id',T.sid));await q(sb.from('pupil_subjects').delete().eq('pupil_id',t.dataset.p).eq('subject_id',t.dataset.s).eq('session_id',T.sid))}
+  const k=t.dataset.p+'|'+t.dataset.s;if(t.checked)T.d.E[k]=1;else{delete T.d.E[k];delete T.d.Sc[k]}},
+ subj(t){T.subj=t.value;render()},
+ async beh(t){const p=t.dataset.p,r=T.d.R[p]=T.d.R[p]||{pupil_id:p},b=r.behaviour=r.behaviour||{};b[t.dataset.k]=t.value;
+  await q(sb.from('remarks').upsert({pupil_id:p,session_id:T.sid,behaviour:b},{onConflict:'pupil_id,session_id'}))},
+ async asid(t){S.asid=t.value;await aLoad();render()},async acls(t){S.acls=t.value;await aLoad();render()},
+ async subname(t){await q(sb.from('subjects').update({name:t.value.trim()}).eq('id',t.dataset.id))},
+ async subact(t){await q(sb.from('subjects').update({active:t.checked}).eq('id',t.dataset.id))},
+ async assign(t){await q(sb.from('classes').update({teacher_id:t.value||null}).eq('id',t.dataset.id));await aInit();render()},
+ async resume(t){await q(sb.from('sessions').update({resume_date:t.value||null}).eq('id',t.dataset.id));await aInit();render()}
+};
+const timers={};
+const later=(k,f)=>{clearTimeout(timers[k]);timers[k]=setTimeout(f,600)};
+const IN={
+ score(t){const p=t.dataset.p,f=t.dataset.f,max=f==='ca'?40:60,v=t.value===''?null:Number(t.value),bad=v!==null&&(!Number.isInteger(v)||v<0||v>max);
+  t.classList.toggle('bad',bad);if(bad){$('#st').textContent='Check the score: CA is 0–40, Exam is 0–60.';return}
+  const k=p+'|'+T.subj,r=T.d.Sc[k]=T.d.Sc[k]||{ca:null,exam:null};r[f]=v;const tr=t.closest('tr'),ok=r.ca!=null&&r.exam!=null;
+  tr.querySelector('.tot').textContent=ok?r.ca+r.exam:'–';tr.querySelector('.gr').textContent=ok?grade(r.ca+r.exam):'–';$('#st').textContent='…';
+  later(k,async()=>{const {error}=await sb.from('scores').upsert({pupil_id:p,subject_id:T.subj,session_id:T.sid,ca:r.ca,exam:r.exam,updated_by:ME.id},{onConflict:'pupil_id,session_id,subject_id'});
+   const s=$('#st');if(s)s.textContent=error?'Not saved: '+error.message:'Saved ✓'})},
+ rem(t){const p=t.dataset.p,f=t.dataset.f,v=t.type==='number'?(t.value===''?null:Number(t.value)):t.value;(T.d.R[p]=T.d.R[p]||{pupil_id:p})[f]=v;
+  later(p+f,()=>sb.from('remarks').upsert({pupil_id:p,session_id:T.sid,[f]:v},{onConflict:'pupil_id,session_id'}).then(r=>{if(r.error)flash(r.error.message,true)}))},
+ arem(t){const p=t.dataset.p,f=t.dataset.f,v=t.type==='number'?(t.value===''?null:Number(t.value)):t.value;(D.a.R[p]=D.a.R[p]||{pupil_id:p})[f]=v;
+  later(p+f,()=>sb.from('remarks').upsert({pupil_id:p,session_id:S.asid,[f]:v},{onConflict:'pupil_id,session_id'}).then(r=>{if(r.error)flash(r.error.message,true);else render()}))},
+ pmail(t){later(t.dataset.p+'m',()=>sb.from('pupils').update({parent_email:t.value.trim()||null}).eq('id',t.dataset.p).then(r=>{if(r.error)flash(r.error.message,true)}))}
+};
+async function api(body){const {data:{session}}=await sb.auth.getSession();
+ const r=await fetch('/api/teachers',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.access_token},body:JSON.stringify(body)});
+ const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Request failed');return j}
+app.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;S.msg=S.msg&&b.dataset.act==='tab'?'':S.msg;ACT[b.dataset.act](b).catch(()=>{})});
+app.addEventListener('change',e=>{const t=e.target,f=t.dataset.ch&&CH[t.dataset.ch];if(f)Promise.resolve(f(t)).catch(()=>{})});
+app.addEventListener('input',e=>{const t=e.target,f=t.dataset.in&&IN[t.dataset.in];if(f)f(t)});
+document.getElementById('who').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(b)ACT[b.dataset.act](b)});
+boot();
+</script>
+</body>
+</html>
