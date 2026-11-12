@@ -302,7 +302,9 @@ function aReports(){const d=D.a,ses=D.sessions.find(x=>x.id===S.asid)||{};
  <p class="mu">Next term begins: ${ses.resume_date?fdate(ses.resume_date):'<span class="no">not set (Terms tab)</span>'} · ${ready.length} of ${rows.length} pupils ready</p>
  <p>Class teacher’s signature: ${hasSig(d.sig)?(d.sig.image?'<b class="ok">signed image added</b>':'<b class="ok">typed by the teacher ('+esc(d.sig.typed_name)+')</b>'):'<span class="no">not added yet</span>'}${D.psig?'':' · <span class="no">proprietress’s signature not uploaded (Signatures tab)</span>'}</p>
  <div class="row"><div><label>Add the teacher’s signed image (photo or scan of the paper signature)</label><input type="file" accept="image/png,image/jpeg" data-ch="upsig" data-who="teacher"></div><div>${d.sig&&d.sig.image?'<button data-act="rmsig">Remove image</button>':''}</div></div>
+ <p><button data-act="delclass" class="no">Delete all pupils in this class…</button> <span class="mu">Permanent. Export to Excel first.</span></p>
  <p><button data-act="suggest" data-kind="proprietress">Suggest proprietress’s remarks for pupils without one</button> <button data-act="printall" ${ready.length?'':'disabled'}>Print all ready reports (${ready.length})</button></p>
+ </div><div class="card"><h3>Class results sheet</h3><p class="mu">Everything the teacher has entered for this class and term.</p>${summaryHTML(d)}</div><div class="card"><h3>Pupils: remarks, fees, reports and PINs</h3>
  ${rows.map(({p,s})=>{const r=d.R[p.id]||{};return`<div class="pup"><b>${esc(p.full_name)}</b> <span class="mu">${esc(p.admission_no)} · class teacher’s remark: ${r.teacher_remark?'✓':'–'} · scores ${s.done}/${s.subs}</span>
  <div class="row"><div><label>Proprietress’s remark</label><select data-ch="pick" data-kind="proprietress">${bankOpts('proprietress',avgOf(d,p),sectionOf(d.level)==='Nursery')}</select><textarea rows="2" data-in="arem" data-ch="arc" data-chk spellcheck="true" lang="en-GB" data-p="${p.id}" data-f="head_remark" style="margin-top:6px">${esc(r.head_remark)}</textarea><div class="chk"></div></div>
  <div><label>Fees outstanding (₦, 0 if none)</label><input type="number" min="0" data-in="arem" data-ch="arc" data-p="${p.id}" data-f="fees_outstanding" value="${r.fees_outstanding==null?'':r.fees_outstanding}"></div>
@@ -310,7 +312,7 @@ function aReports(){const d=D.a,ses=D.sessions.find(x=>x.id===S.asid)||{};
  ${s.miss.length?`<p class="mu">Still needed: ${esc(s.miss.join(', '))}.</p>`:'<p class="ok">Ready to issue.</p>'}
  <div class="row"><div><button data-act="viewrep" data-id="${p.id}" ${s.miss.length?'disabled':''}>View / print report</button></div>
  <div><label>PIN valid for</label><select id="d${p.id}"><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option><option value="45" selected>45 days</option></select></div>
- <div><button class="p" data-act="pin" data-id="${p.id}" ${s.miss.length?'disabled':''}>Generate PIN</button></div></div>
+ <div><button class="p" data-act="pin" data-id="${p.id}" ${s.miss.length?'disabled':''}>Generate PIN</button></div><div><button data-act="delpupil" data-id="${p.id}" class="no">Delete pupil permanently</button></div></div>
  ${S.pin&&S.pin.id===p.id?`<p>PIN for ${esc(p.full_name)}: <span class="pin">${esc(S.pin.pin)}</span><br><span class="mu">Shown once. Admission number ${esc(p.admission_no)}. Valid until ${new Date(S.pin.exp).toLocaleDateString('en-GB')}.</span><br>
  ${p.parent_email?`<a href="${esc(mailto(p))}">Email this to the parent</a>`:'<span class="mu">Add a parent email above to send by email, or give it to the parent on paper/WhatsApp.</span>'}</p>`:''}</div>`}).join('')}</div>`}
 function mailto(p){const body=`Dear Parent,\n\n${p.full_name}'s ${(D.sessions.find(x=>x.id===S.asid)||{}).term||''} report is ready.\n\nOpen ${location.origin} and use the Parents section\nAdmission number: ${p.admission_no}\nPIN: ${S.pin.pin}\n\nPlease download it before ${new Date(S.pin.exp).toLocaleDateString('en-GB')}.\n\n${C.SCHOOL}\nCall/WhatsApp ${C.PHONE}`;
@@ -522,6 +524,12 @@ const ACT={
  async template(){try{await makeTemplate()}catch(e){flash(e.message,true)}},
  async runimport(){try{await runImport()}catch(e){flash(e.message,true)}},
  anmode(b){S.an.mode=b.dataset.m;render()},
+ async delpupil(b){const p=D.a.pupils.find(x=>x.id===b.dataset.id);if(!p||!confirm('Permanently delete '+p.full_name+' with all scores, remarks and PINs? This cannot be undone. Export to Excel first if you may need the data.'))return;
+  await q(sb.from('pupils').delete().eq('id',p.id));D.an=null;await aLoad();flash(p.full_name+' deleted.')},
+ async delclass(){const c=D.classes.find(x=>x.id===S.acls),n=D.a.pupils.length;
+  if((prompt('This permanently deletes all '+n+' pupils in '+clab(c)+' with their scores, remarks, PINs, submission status and signature. Export to Excel first.\n\nType DELETE to confirm:')||'').trim()!=='DELETE')return flash('Nothing was deleted.');
+  await q(sb.from('submissions').delete().eq('class_id',c.id));await q(sb.from('teacher_signatures').delete().eq('class_id',c.id));
+  const all=await q(sb.from('pupils').select('id').eq('class_id',c.id));if(all.length)await q(sb.from('pupils').delete().eq('class_id',c.id));D.an=null;await aLoad();flash(clab(c)+' cleared: '+all.length+' pupils deleted.')},
  async sign(){const n=val('sgn');if(!n)return flash('Type the name to sign with.',true);await q(sb.from('teacher_signatures').upsert({class_id:D.my.id,session_id:T.sid,typed_name:n},{onConflict:'class_id,session_id'}));await tInit();flash('Signed.')},
  async rmsig(){await q(sb.from('teacher_signatures').update({image:null}).eq('class_id',S.acls).eq('session_id',S.asid));await aLoad();flash('Signature image removed.')},
  async rmpsig(){await q(sb.from('settings').delete().eq('key','proprietress_signature'));D.psig='';flash('Signature removed.')},

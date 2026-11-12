@@ -1,5 +1,14 @@
 # Comence Results Portal (proof of concept, 1st Term 2026/2027)
 
+> ## Already running the first version? Start here (do not reinstall)
+> Your database, admin login, Supabase keys and Vercel settings stay exactly as they are. Do not run `schema.sql` again and do not delete anything.
+> 1. Supabase > SQL Editor > New query: paste all of `supabase/update-2-signatures-remarks.sql` and Run (choose "Run and enable RLS" if asked).
+> 2. New query: paste all of `supabase/update-3-classes-progress-dob.sql` and Run. Update 3 needs update 2 first. It renames your existing classes in place and lists them at the end.
+> 3. Push `index.html`, `README.md` and the two `.sql` files to GitHub. Leave your own `config.js` alone. Vercel redeploys by itself.
+> 4. Hard-refresh the site (Ctrl+Shift+R) and log in as admin. The sections "Update 3" and "Update 4" below describe what is new.
+>
+> Everything from "Step 1" to "Step 4" is the **first-time installation guide**, only for a brand-new setup.
+
 Comence Nursery & Primary School, Narayi Highcost, Kaduna.
 Teachers log in, set their class and term, add pupils, tick the subjects each pupil took and enter CA (0-40) and Exam (0-60). The admin (super user) reviews, adds the proprietress's remark and fees outstanding, then prints reports or gives parents a PIN. Parents open the portal with Admission Number + PIN until the PIN expires.
 
@@ -11,8 +20,8 @@ Teachers log in, set their class and term, add pupils, tick the subjects each pu
 | `logo.png` | School logo (used on screens and report cards) |
 | `api/teachers.js` | Lets the admin create teacher logins and reset passwords |
 | `supabase/schema.sql` | The database, grading, subjects, security rules, PIN logic. Run first. |
-| `supabase/update-3-classes-progress-dob.sql` | **Run third.** Real class names, Nursery progress reports, date of birth and ages, 3-decimal scores |
 | `supabase/update-2-signatures-remarks.sql` | **Run second.** Signatures, class averages, preset remarks, free class names |
+| `supabase/update-3-classes-progress-dob.sql` | **Run third.** Real class names, Nursery progress reports, date of birth and ages, 3-decimal scores, safe admission numbers |
 | `vercel.json`, `package.json`, `.gitignore` | Hosting settings |
 
 Cost: GitHub, Vercel Hobby and Supabase Free are all free for this proof of concept.
@@ -20,7 +29,7 @@ Cost: GitHub, Vercel Hobby and Supabase Free are all free for this proof of conc
 ---
 ## Step 1: Create the database (Supabase)
 1. Go to supabase.com, sign up and click **New project**. Name it `comence-results`, set a database password (save it) and choose the nearest region offered.
-2. Wait until it finishes, then open **SQL Editor > New query**, paste the whole of `supabase/schema.sql` and press **Run**. It should say "Success". This creates all tables, the 18 classes (Playgroup to Primary 6, arms A and B), the 7 Nursery and 14 Primary subjects, the grade scale (A 90-100, B+ 70-89, B 60-69, C 50-59, D 40-49, E 0-39) and the 2026/2027 1st Term.
+2. Wait until it finishes, then open **SQL Editor > New query**, paste the whole of `supabase/schema.sql` and press **Run**. It should say "Success". This creates all tables, the first set of 18 classes (renamed to your real class names by update 3), the first Nursery and Primary subjects, the grade scale (A 90-100, B+ 70-89, B 60-69, C 50-59, D 40-49, E 0-39) and the 2026/2027 1st Term.
 2b. **Run the second file:** New query, paste all of `supabase/update-2-signatures-remarks.sql`, press **Run** (choose **Run and enable RLS** if asked). It adds signatures, class averages on report cards, ready-made remarks, and lets you rename classes.
 3. **Create the admin login:** Authentication > Users > **Add user > Create new user**. Enter the admin email and password and tick **Auto Confirm User**.
 4. **Make that user the admin:** SQL Editor, run (use the admin's email):
@@ -61,9 +70,9 @@ git push -u origin main
 2. **Subjects** tab: check or rename subjects if needed.
 3. **Teachers & classes** tab: create each teacher's login (name, email, starting password), then assign classes (or let teachers pick their own class in step 1 of their screen).
 4. **Reports & PINs** tab, after teachers submit: add the proprietress's remark and fees outstanding (0 if none) for each pupil, then **View / print report** or **Generate PIN**. Choose how long the PIN stays valid (7 to 45 days). The PIN is shown once.
-5. Give parents the website address with `#parent` at the end, their child's Admission Number and the PIN, or use "Email this to the parent". **Print all ready reports** makes one page per pupil (choose "Save as PDF" to keep a file).
+5. Give parents the website address, their child's Admission Number and the PIN (they use the Parents section of the login page), or use "Email this to the parent". **Print all ready reports** makes one page per pupil (choose "Save as PDF" to keep a file).
 
-**Teacher** (steps 1 to 6 on their screen): class and term, add pupils (one name per line), tick subjects each pupil took, enter scores (saves as you type), class teacher's remark (attendance and behaviour optional), then **Submit**. After submitting, only the admin can unlock.
+**Teacher** (steps 1 to 6 on their screen): class and term, add pupils (name and date of birth, one per line), tick subjects each pupil took, enter scores or, in Nursery, subject remarks (saves as you type), general remarks (attendance and behaviour optional), then check the summary and **Submit**. After submitting, only the admin can unlock.
 
 **Parent:** website address, Admission Number + PIN, then Print / Save as PDF. After the PIN expires or after 5 wrong tries the report cannot be opened until the school issues a new PIN.
 
@@ -73,7 +82,7 @@ git push -u origin main
 - **Contact details:** parents see the address, 09128982879 (call/WhatsApp) and comence.schools@gmail.com. The technical support number 09053903530 shows only on staff screens. Change any of these in `config.js`.
 - **Before real data:** keep the repository private. Supabase Free pauses a project after about a week with no activity (open the dashboard to resume it) and Vercel Hobby is for non-commercial use, so move both to paid plans for long-term or multi-school use. Pupils are children: keep access limited to staff, and follow the Nigeria Data Protection Act 2023.
 - **Backups:** each term, use Supabase > Table Editor > Export to CSV for `pupils`, `scores` and `remarks`.
-- **Not included yet:** CSV import of pupils, admin editing of scores (the admin unlocks and the teacher edits), and automatic emailing with an attached PDF (the email button opens your mail app with the PIN message).
+- **Not included yet:** admin editing of scores directly (the admin unlocks and the teacher edits) and automatic emailing with an attached PDF (the email button opens your mail app with the PIN message). Pupils and scores can be loaded in bulk through the Excel import.
 - **Troubleshooting:** blank page or "Failed to fetch" means `config.js` still has the placeholder values. "Create login" failing means the three Vercel environment variables are missing (redeploy after adding them).
 
 
@@ -99,3 +108,15 @@ Run `supabase/update-3-classes-progress-dob.sql` once (after update-2), then dep
   - *Export* downloads one workbook (Pupils with date of birth, Scores, Enrolment, ProgressRemarks, Remarks, Subjects, Sessions, RemarkBank, Classes). Signatures, PINs and passwords are never included. Do it at the end of every term as a backup.
   - *Import* reads a workbook in the same layout (or the blank template). It shows what it found and any problem rows (sheet and row number) before you confirm. Rows are added or updated, **nothing is deleted**, bad rows are skipped, missing terms are created, and classes must already exist. Use it to bring back earlier terms or last year's results. Pupils can be on the Pupils sheet or already in the portal. Dates use yyyy-mm-dd (real Excel dates also work). Blank cells in a row you import replace the saved value with blank.
   - The Excel library is loaded from cdnjs only when you press Export or choose a file, so other screens stay light. It needs an internet connection.
+
+## Clearing test data (start afresh)
+- **In the portal (admin):** Reports & PINs > choose the class > **Delete all pupils in this class…** (type DELETE to confirm), or **Delete pupil permanently** on one pupil. This removes the pupils with their scores, subject ticks, remarks, PINs, the class's submission status and the teacher's signature for that class. Classes, subjects, terms, teacher logins and class assignments stay. Export to Excel first if you may want the data back.
+- **Teacher "Remove" button** only hides a pupil from the class list (the records stay, so nothing is lost by accident). Permanent deletion is for the admin only.
+- **With SQL (Supabase SQL Editor):**
+```
+delete from submissions        where class_id in (select id from classes where level = 'Primary 6');
+delete from teacher_signatures where class_id in (select id from classes where level = 'Primary 6');
+delete from pupils             where class_id in (select id from classes where level = 'Primary 6');
+```
+Deleting pupils automatically deletes their scores, subject ticks, remarks, progress remarks and PINs.
+- **Admin class results sheet:** the Reports & PINs tab now shows a full results table for the chosen class and term (the same summary the teacher sees). "View report" and "Generate PIN" stay greyed until every compulsory item is present; the line "Still needed" under each pupil says which.
