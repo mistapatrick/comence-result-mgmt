@@ -290,7 +290,7 @@ function summaryHTML(d){
  const cav=sj.map(s=>{const t=d.pupils.map(p=>d.Sc[p.id+'|'+s.id]).filter(v=>v&&v.ca!=null&&v.exam!=null).map(v=>v.ca+v.exam);return t.length?num(t.reduce((a,b)=>a+b,0)/t.length):null});
  return`<div class="scroll"><table><tr><th>#</th><th>Pupil</th><th>Date of birth</th>${sj.map(s=>`<th style="font-size:12px">${esc(s.name)}</th>`).join('')}<th>Average</th><th>Grade</th><th>Position</th><th>Remark</th></tr>
  ${d.pupils.map((p,i)=>{const a=avgs[p.id];return`<tr><td>${i+1}</td><td>${esc(p.full_name)}</td><td>${dob(p)}</td>${sj.map(s=>{const v=d.Sc[p.id+'|'+s.id];return`<td>${!d.E[p.id+'|'+s.id]?'<span class="mu">–</span>':v&&v.ca!=null&&v.exam!=null?`<b>${fx(num(v.ca+v.exam))}</b><br><span class="mu" style="font-size:12px">${fx(v.ca)} + ${fx(v.exam)}</span>`:miss}</td>`}).join('')}
- <td><b>${a==null?'–':fx(num(a))}</b></td><td>${a==null?'–':grade(a)}</td><td>${a==null?'–':ord(1+vals.filter(v=>v>a).length)}</td><td>${rem(p)}</td></tr>`}).join('')}
+ <td><b>${a==null?'–':fx(num(a))}</b></td><td>${a==null?'–':grade(a)}</td><td>${a==null?'–':ord(1+vals.filter(v=>num(v)>num(a)).length)}</td><td>${rem(p)}</td></tr>`}).join('')}
  <tr><th colspan="3">Class average</th>${cav.map(v=>`<th>${fx(v)}</th>`).join('')}<th>${vals.length?fx(num(vals.reduce((a,b)=>a+b,0)/vals.length)):'–'}</th><th colspan="3"></th></tr></table></div>
  <p class="mu">Each score cell shows the total, with CA + Exam underneath. Check any “missing” cell and any total that looks wrong.</p>`}
 function tSubmit(){if(needSetup())return needSetup();const d=T.d,L=locked(),sg=d.sig||{};
@@ -361,7 +361,7 @@ function anStats(sid){const an=D.an,per={};
  an.sc.forEach(x=>{if(x.session_id!==sid||x.total==null)return;const o=per[x.pupil_id]=per[x.pupil_id]||{sum:0,n:0,sub:{}};o.sum+=+x.total;o.n++;o.sub[x.subject_id]=+x.total});
  const avg={};Object.keys(per).forEach(k=>avg[k]=per[k].sum/per[k].n);const vals=Object.values(avg),m=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null,subAvg={};
  an.subjects.forEach(u=>{subAvg[u.id]=m(Object.values(per).map(o=>o.sub[u.id]).filter(v=>v!=null))});
- return{per,avg,vals,cavg:m(vals),subAvg,n:vals.length,rank:pid=>avg[pid]==null?null:1+vals.filter(v=>v>avg[pid]).length}}
+ return{per,avg,vals,cavg:m(vals),subAvg,n:vals.length,rank:pid=>avg[pid]==null?null:1+vals.filter(v=>num(v)>num(avg[pid])).length}}
 const dlt=(a,b)=>{if(a==null||b==null)return'–';const d=num(a-b);return`<span class="${d>0?'ok':d<0?'no':'mu'}">${d>0?'▲ +':d<0?'▼ ':'• '}${fx(d)}</span>`};
 function lineSvg(labels,series){const W=620,H=230,L=36,R=14,T=16,B=34,n=labels.length,x=i=>n<2?(L+W-R)/2:L+i*(W-L-R)/(n-1),y=v=>T+(H-T-B)*(1-v/100),g=[0,25,50,75,100];
  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Trend chart" style="width:100%;height:auto"><g style="stroke:var(--bd)">${g.map(v=>`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/>`).join('')}</g>`;

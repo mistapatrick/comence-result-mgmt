@@ -21,6 +21,7 @@ Teachers log in, set their class and term, add pupils, tick the subjects each pu
 | `api/teachers.js` | Lets the admin create teacher logins and reset passwords |
 | `supabase/schema.sql` | The database, grading, subjects, security rules, PIN logic. Run first. |
 | `supabase/update-2-signatures-remarks.sql` | **Run second.** Signatures, class averages, preset remarks, free class names |
+| `supabase/update-4-tie-positions.sql` | **Run fourth.** Tied positions (1st, 1st, 3rd) decided on the 3-decimal average |
 | `supabase/update-3-classes-progress-dob.sql` | **Run third.** Real class names, Nursery progress reports, date of birth and ages, 3-decimal scores, safe admission numbers |
 | `vercel.json`, `package.json`, `.gitignore` | Hosting settings |
 
@@ -127,3 +128,6 @@ Deleting pupils automatically deletes their scores, subject ticks, remarks, prog
 - To print: open the report, press **Print or save as PDF**, choose paper size **A4**, margins **Default**, and turn **off** "Headers and footers" (and leave scale at 100%). "Print all ready reports" prints one pupil per page.
 - CA, Exam, Total, Class avg, grand total and the averages always show three decimal places (for example 35.000).
 - On a phone or tablet the report shows as a scaled-down A4 sheet; pinch to zoom, or use Print > Save as PDF.
+
+## Update 5: tied positions (run `supabase/update-4-tie-positions.sql` once)
+Pupils with the same average share a position and the next position is skipped, British style: two pupils tied 1st are followed by 3rd; three tied 4th are followed by 7th. Ties are decided on the average shown to three decimal places, so two pupils who both show 80.000 always share a position. This applies to report cards, the teacher's check summary and Analytics.
