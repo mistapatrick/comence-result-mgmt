@@ -1,7 +1,7 @@
 # Comence Results Portal (proof of concept, 1st Term 2026/2027)
 
 Comence Nursery & Primary School, Narayi Highcost, Kaduna.
-Teachers log in, set their class and term, add pupils, tick the subjects each pupil took and enter CA (0-40) and Exam (0-60). The admin (super user) reviews, adds the head teacher's remark and fees outstanding, then prints reports or gives parents a PIN. Parents open the portal with Admission Number + PIN until the PIN expires.
+Teachers log in, set their class and term, add pupils, tick the subjects each pupil took and enter CA (0-40) and Exam (0-60). The admin (super user) reviews, adds the proprietress's remark and fees outstanding, then prints reports or gives parents a PIN. Parents open the portal with Admission Number + PIN until the PIN expires.
 
 ## Files
 | File | What it is |
@@ -10,7 +10,9 @@ Teachers log in, set their class and term, add pupils, tick the subjects each pu
 | `config.js` | **You edit this**: Supabase address and public key, school contacts |
 | `logo.png` | School logo (used on screens and report cards) |
 | `api/teachers.js` | Lets the admin create teacher logins and reset passwords |
-| `supabase/schema.sql` | The database, grading, subjects, security rules, PIN logic |
+| `supabase/schema.sql` | The database, grading, subjects, security rules, PIN logic. Run first. |
+| `supabase/update-3-classes-progress-dob.sql` | **Run third.** Real class names, Nursery progress reports, date of birth and ages, 3-decimal scores |
+| `supabase/update-2-signatures-remarks.sql` | **Run second.** Signatures, class averages, preset remarks, free class names |
 | `vercel.json`, `package.json`, `.gitignore` | Hosting settings |
 
 Cost: GitHub, Vercel Hobby and Supabase Free are all free for this proof of concept.
@@ -19,6 +21,7 @@ Cost: GitHub, Vercel Hobby and Supabase Free are all free for this proof of conc
 ## Step 1: Create the database (Supabase)
 1. Go to supabase.com, sign up and click **New project**. Name it `comence-results`, set a database password (save it) and choose the nearest region offered.
 2. Wait until it finishes, then open **SQL Editor > New query**, paste the whole of `supabase/schema.sql` and press **Run**. It should say "Success". This creates all tables, the 18 classes (Playgroup to Primary 6, arms A and B), the 7 Nursery and 14 Primary subjects, the grade scale (A 90-100, B+ 70-89, B 60-69, C 50-59, D 40-49, E 0-39) and the 2026/2027 1st Term.
+2b. **Run the second file:** New query, paste all of `supabase/update-2-signatures-remarks.sql`, press **Run** (choose **Run and enable RLS** if asked). It adds signatures, class averages on report cards, ready-made remarks, and lets you rename classes.
 3. **Create the admin login:** Authentication > Users > **Add user > Create new user**. Enter the admin email and password and tick **Auto Confirm User**.
 4. **Make that user the admin:** SQL Editor, run (use the admin's email):
 ```
@@ -57,7 +60,7 @@ git push -u origin main
 1. Log in. **Terms** tab: set "Next term begins" for 1st Term 2026/2027 (compulsory on reports).
 2. **Subjects** tab: check or rename subjects if needed.
 3. **Teachers & classes** tab: create each teacher's login (name, email, starting password), then assign classes (or let teachers pick their own class in step 1 of their screen).
-4. **Reports & PINs** tab, after teachers submit: add the head teacher's remark and fees outstanding (0 if none) for each pupil, then **View / print report** or **Generate PIN**. Choose how long the PIN stays valid (7 to 45 days). The PIN is shown once.
+4. **Reports & PINs** tab, after teachers submit: add the proprietress's remark and fees outstanding (0 if none) for each pupil, then **View / print report** or **Generate PIN**. Choose how long the PIN stays valid (7 to 45 days). The PIN is shown once.
 5. Give parents the website address with `#parent` at the end, their child's Admission Number and the PIN, or use "Email this to the parent". **Print all ready reports** makes one page per pupil (choose "Save as PDF" to keep a file).
 
 **Teacher** (steps 1 to 6 on their screen): class and term, add pupils (one name per line), tick subjects each pupil took, enter scores (saves as you type), class teacher's remark (attendance and behaviour optional), then **Submit**. After submitting, only the admin can unlock.
@@ -72,3 +75,27 @@ git push -u origin main
 - **Backups:** each term, use Supabase > Table Editor > Export to CSV for `pupils`, `scores` and `remarks`.
 - **Not included yet:** CSV import of pupils, admin editing of scores (the admin unlocks and the teacher edits), and automatic emailing with an attached PDF (the email button opens your mail app with the PIN message).
 - **Troubleshooting:** blank page or "Failed to fetch" means `config.js` still has the placeholder values. "Create login" failing means the three Vercel environment variables are missing (redeploy after adding them).
+
+
+## Update 3: classes, Nursery progress report, ages, decimals
+Run `supabase/update-3-classes-progress-dob.sql` once (after update-2), then deploy the new `index.html`.
+- **Classes** become: Playgroup, Playgroup II, Pre-Nursery, Pre-Nursery II, Nursery 1A, 1B, 2A, 2B, Primary 1 Alpha/Beta, 2 Amazon/Benue, 3 Orange/Anambra, 4 Limpopo/Niger, 5 Taraba/Senegal, 6 Rima/Imo. The script renames the old A/B classes in place (pupils and teachers stay attached). At the end it lists all classes: if you renamed any earlier by hand, an extra row may remain. Delete an unused leftover with `delete from classes where level='Primary 3' and arm='Gold';` (only if it has no pupils).
+- **Nursery section** (Playgroup, Pre-Nursery, Nursery) uses a **Progress Report**: teachers type a remark for each subject (no scores). Step 4 becomes "Subject remarks" with a British English check under each box (spelling such as colour/behaviour/maths, common typing mistakes, capital letters, full stops, a/an and basic verb agreement). It runs in the browser, is free and sends nothing anywhere. It is a helper, not a full proofreader. Step 5 collects general remarks, appearance, weight, height and attendance. The Primary section keeps the scored Terminal Report.
+- **Nursery subjects** now include those on the paper form (Number Work, Colour & Shapes, Hand Control, Phonics/Reading, English, Art/Craft, Physical Education, CRS/IRK, Story Telling, Nature Studies, Singing, Response to Homework) alongside the earlier list. Switch any off, or rename one, in the admin **Subjects** tab (the form printed "Signing"; it was added as "Singing").
+- **Date of birth:** teachers enter it for every pupil (step 2, or paste `Name, dd/mm/yyyy` lines). It is required before a report can be issued.
+- **Age:** each report shows the pupil's age and the class average age. For a PIN report the age is fixed at the date the PIN was issued; for admin preview and print it is the day you generate it.
+- **Decimals:** CA, Exam, totals and averages accept up to 3 decimal places.
+- **Terms tab** now also has "Term ends", shown as "Report for term ending" on the progress report.
+- The login page is one page with two clearly separate sections: **Staff and Admin login** and **Parents** (admission number and PIN). Everyone uses the same website address.
+- Admission numbers generated by the portal never clash with numbers brought in from Excel.
+
+## Update 4: check summary, analytics, Excel (no extra SQL needed)
+- **Teacher step 6 "Check & submit":** a summary table of everything entered (date of birth, every subject's total with CA + Exam underneath, average, grade, position, remark, class average per subject; for Nursery a tick matrix and a readable list of the remarks). Missing items show in red. Submitting is only allowed when nothing is missing.
+- **Admin > Analytics** (Primary classes, which have scores):
+  - *Class performance:* class average over terms, subject averages now against an earlier term, every pupil ranked with change since the earlier term and difference from the class average, pass rate (average 40 or more) and grade spread.
+  - *Individual pupil:* pupil average against the class average over time, each subject now against the earlier term and against the class average (table and bars), strongest and weakest subject.
+  - "Compare with" defaults to the previous term that has scores; pick any other term if you prefer. Past terms use the pupils who are in the class now, so if pupils are moved between classes, earlier figures reflect today's class list.
+- **Admin > Excel data:**
+  - *Export* downloads one workbook (Pupils with date of birth, Scores, Enrolment, ProgressRemarks, Remarks, Subjects, Sessions, RemarkBank, Classes). Signatures, PINs and passwords are never included. Do it at the end of every term as a backup.
+  - *Import* reads a workbook in the same layout (or the blank template). It shows what it found and any problem rows (sheet and row number) before you confirm. Rows are added or updated, **nothing is deleted**, bad rows are skipped, missing terms are created, and classes must already exist. Use it to bring back earlier terms or last year's results. Pupils can be on the Pupils sheet or already in the portal. Dates use yyyy-mm-dd (real Excel dates also work). Blank cells in a row you import replace the saved value with blank.
+  - The Excel library is loaded from cdnjs only when you press Export or choose a file, so other screens stay light. It needs an internet connection.
