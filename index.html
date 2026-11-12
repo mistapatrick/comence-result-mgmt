@@ -56,13 +56,20 @@ td input.sc{width:96px}
 .panel .pb{padding:16px}
 .or{display:flex;align-items:center;justify-content:center}.or span{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,var(--b1),var(--b2));border:1px solid var(--bb);color:var(--mu);font-weight:700;box-shadow:var(--sh)}
 @media (max-width:720px){.auth{grid-template-columns:1fr}.or{height:34px}}
-.rc{background:#fff;color:#111;font-family:Georgia,"Times New Roman",serif;padding:22px;border:2px solid #1c2b4a;margin-bottom:20px}
-.rc .hd{display:flex;gap:14px;align-items:center;justify-content:center;text-align:center;flex-wrap:wrap}
-.rc .hd img{height:84px}.rc h1{margin:0;font-size:22px;color:#1c2b4a}.rc .ad{font-size:13px}
-.rc .sub{text-align:center;margin:10px 0;font-weight:700}
-.rc table th,.rc table td{border:1px solid #888;color:#111;font-size:14px}.rc th{background:#e8ecf4}
-.rc .meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-bottom:12px}
-.rc .pos{font-weight:700;color:#8a5a00}.sig{display:flex;gap:24px;margin-top:20px}.sig>div{flex:1;text-align:center}.sig .box{height:64px;display:flex;align-items:flex-end;justify-content:center}.sig .box img{max-height:60px;max-width:100%}.sig .l{border-top:1px solid #111;padding-top:4px;font-size:13px}.cur{font:italic 28px/1.1 "Brush Script MT","Segoe Script","Lucida Handwriting","Snell Roundhand",cursive;color:#1c2b4a}
+.pw{margin:0 auto 20px;overflow:hidden}
+.paper{background:#fff;color:#111;width:210mm;padding:12mm 20mm;transform-origin:top left;box-shadow:0 8px 24px rgba(0,0,0,.28);border-radius:3px}
+.rc{width:170mm;zoom:var(--fit,1);font-family:Georgia,"Times New Roman",serif;font-size:10pt;line-height:1.3;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rc .hd{display:flex;gap:4mm;align-items:center;justify-content:center;text-align:center}
+.rc .hd img{height:20mm;width:auto}
+.rc h1{margin:0;font-size:17pt;line-height:1.15;color:#1c2b4a}.rc .ad{font-size:8.5pt}
+.rc .sub{text-align:center;margin:2.5mm 0;font-weight:700;font-size:11pt}
+.rc table{border-collapse:collapse;width:100%;table-layout:fixed}
+.rc table th,.rc table td{border:1px solid #777;color:#111;font-size:9.5pt;padding:.75mm 2mm;text-align:left;vertical-align:top;word-wrap:break-word}
+.rc th{background:#e8ecf4}.rc .n{text-align:right;font-variant-numeric:tabular-nums}
+.rc.prog table th,.rc.prog table td{font-size:9pt}
+.rc .meta{display:grid;grid-template-columns:1fr 1fr;gap:1mm 6mm;margin-bottom:2.5mm}
+.rc p{margin:1.2mm 0}.rc .pos{font-weight:700;color:#8a5a00}.rc .keyline{font-size:9pt}
+.sig{display:flex;gap:10mm;margin-top:5mm}.sig>div{flex:1;text-align:center}.sig .box{height:13mm;display:flex;align-items:flex-end;justify-content:center}.sig .box img{max-height:12mm;max-width:100%}.sig .l{border-top:1px solid #111;padding-top:1mm;font-size:9pt}.cur{font:italic 24px/1.1 "Brush Script MT","Segoe Script","Lucida Handwriting","Snell Roundhand",cursive;color:#1c2b4a}
 .foot{text-align:center;color:var(--mu);font-size:13px;padding:8px 16px 28px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
 .tile{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--bd);border-radius:14px;padding:12px;box-shadow:var(--sh),inset 0 1px 0 var(--gl)}.tile .big{font-size:26px;font-weight:700;line-height:1.2}
@@ -72,7 +79,8 @@ td input.sc{width:96px}
 .key{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px}.key.a{background:var(--g1)}.key.b{background:var(--gold)}
 details.pup summary{cursor:pointer}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-@media print{.noprint,header.top,.foot{display:none!important}body{background:#fff}main{padding:0;max-width:none}.rc{border:none;page-break-after:always;margin:0}}
+@page{size:A4;margin:18mm 20mm}
+@media print{.noprint,header.top,.foot{display:none!important}body{background:#fff}main{padding:0;max-width:none}.pw{width:auto!important;height:auto!important;margin:0;overflow:visible;break-after:page;page-break-after:always}.pw:last-child{break-after:auto;page-break-after:auto}.paper{transform:none!important;width:170mm;padding:0;box-shadow:none;border-radius:0}}
 </style>
 </head>
 <body>
@@ -92,6 +100,7 @@ const BEH=['Neatness','Punctuality','Attentiveness','Politeness'],RATE=['','Exce
 const ord=n=>{const v=n%100,s=['th','st','nd','rd'];return n+(s[(v-20)%10]||s[v]||'th')};
 const fdate=d=>d?new Date(d+'T00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'';
 const naira=n=>'₦'+Number(n||0).toLocaleString('en-NG');
+const f3=n=>n==null||n===''?'–':Number(n).toFixed(3);
 const fx=n=>n==null||n===''?'–':String(+Number(n).toFixed(3)),num=n=>+Number(n).toFixed(3);
 const clab=c=>c.level+(!c.arm?'':c.arm.length===1?c.arm:' '+c.arm);
 const pd=s=>{s=(s||'').trim();const m=s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/),iso=m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:(/^\d{4}-\d{2}-\d{2}$/.test(s)?s:null);if(!iso)return null;const d=new Date(iso);return(!isNaN(d)&&d.toISOString().slice(0,10)===iso&&d<=new Date()&&d.getFullYear()>=2005)?iso:null};
@@ -166,10 +175,12 @@ async function aInit(){
  D.profiles=await q(sb.from('profiles').select('*').order('full_name'));
  D.allsub=await q(sb.from('subjects').select('*').order('sort'));
  D.bank=await q(sb.from('remark_bank').select('*').order('sort'));D.psig=((await sb.from('settings').select('value').eq('key','proprietress_signature').maybeSingle()).data||{}).value||'';
- S.asid=S.asid||(D.sessions[0]||{}).id;S.acls=S.acls||(D.classes[0]||{}).id;await aLoad();
- S.an=S.an||{cls:((D.classes.find(c=>sectionOf(c.level)==='Primary')||D.classes[0])||{}).id,sid:(chron().pop()||{}).id,cmp:'',mode:'class',pid:''};
+ S.asid=S.asid||(chron().pop()||{}).id;await aOver();
+ S.acls=S.acls||(D.classes.find(c=>D.subs.some(s=>s.class_id===c.id&&s.status!=='draft'))||D.classes.find(c=>D.cnt[c.id])||D.classes[0]||{}).id;await aLoad();
+ S.an=S.an||{cls:((D.classes.find(c=>sectionOf(c.level)==='Primary'&&D.cnt[c.id])||D.classes.find(c=>sectionOf(c.level)==='Primary')||D.classes[0])||{}).id,sid:(chron().pop()||{}).id,cmp:'',mode:'class',pid:''};
 }
-async function aLoad(){const c=D.classes.find(x=>x.id===S.acls);D.a=(c&&S.asid)?await loadClass(c.id,S.asid,c.level):null}
+async function aOver(){D.subs=await q(sb.from('submissions').select('*').eq('session_id',S.asid));const ps=await fetchAll(()=>sb.from('pupils').select('id,class_id').eq('active',true).order('id'));D.cnt={};ps.forEach(p=>D.cnt[p.class_id]=(D.cnt[p.class_id]||0)+1)}
+async function aLoad(){await aOver();const c=D.classes.find(x=>x.id===S.acls);D.a=(c&&S.asid)?await loadClass(c.id,S.asid,c.level):null}
 async function boot(){
  const {data:{session}}=await sb.auth.getSession();
  if(!session){S.view='login';return render()}
@@ -189,25 +200,27 @@ function terminalHTML(r){
  return`<div class="rc">${headBlock(r,'TERMINAL REPORT CARD')}
  <div class="meta"><div><b>Name:</b> ${esc(r.name)}</div><div><b>Admission No:</b> ${esc(r.admission_no)}</div><div><b>Class:</b> ${esc(r.class)}</div>
  <div><b>Position:</b> <span class="pos">${r.position?ord(r.position)+' of '+r.class_size:'–'}</span></div><div><b>Age:</b> ${esc(r.age)}</div><div><b>Average age of class:</b> ${esc(r.class_avg_age)}</div></div>
- <div class="scroll"><table><tr><th>Subject</th><th>CA (40)</th><th>Exam (60)</th><th>Total (100)</th><th>Class avg</th><th>Grade</th></tr>
- ${r.rows.map(x=>`<tr><td>${esc(x.subject)}</td><td>${fx(x.ca)}</td><td>${fx(x.exam)}</td><td>${fx(x.total)}</td><td>${fx(x.class_avg)}</td><td>${esc(x.grade)}</td></tr>`).join('')}
- <tr><th colspan="3">Grand total (out of ${r.rows.length*100})</th><th>${fx(r.grand_total)}</th><th></th><th>${esc(r.average_grade)}</th></tr></table></div>
- <p>Pupil’s average: <b>${fx(r.average)}</b> · Class average: <b>${fx(r.class_average)}</b> · Key: A 90–100, B+ 70–89, B 60–69, C 50–59, D 40–49, E 0–39</p>
+ <table><colgroup><col style="width:38%"><col style="width:11%"><col style="width:12%"><col style="width:14%"><col style="width:15%"><col style="width:10%"></colgroup>
+ <tr><th>Subject</th><th class="n">CA (40)</th><th class="n">Exam (60)</th><th class="n">Total (100)</th><th class="n">Class avg</th><th>Grade</th></tr>
+ ${r.rows.map(x=>`<tr><td>${esc(x.subject)}</td><td class="n">${f3(x.ca)}</td><td class="n">${f3(x.exam)}</td><td class="n">${f3(x.total)}</td><td class="n">${f3(x.class_avg)}</td><td>${esc(x.grade)}</td></tr>`).join('')}
+ <tr><th colspan="3">Grand total (out of ${r.rows.length*100})</th><th class="n">${f3(r.grand_total)}</th><th></th><th>${esc(r.average_grade)}</th></tr></table>
+ <p>Pupil’s average: <b>${f3(r.average)}</b> · Class average: <b>${f3(r.class_average)}</b></p>
+ <p class="keyline">Key: A 90–100, B+ 70–89, B 60–69, C 50–59, D 40–49, E 0–39</p>
  ${r.days_open?`<p>Attendance: <b>${esc(r.days_present||0)}</b> of <b>${esc(r.days_open)}</b> days</p>`:''}
  ${hasB?`<p>${BEH.filter(k=>b[k]).map(k=>k+': <b>'+esc(b[k])+'</b>').join(' · ')}</p>`:''}
  <p><b>Class teacher’s remark:</b> ${esc(r.teacher_remark)}</p><p><b>Proprietress’s remark:</b> ${esc(r.head_remark)}</p>
  <p><b>Fees outstanding:</b> ${naira(r.fees_outstanding)} · <b>Next term begins:</b> ${fdate(r.resume_date)}</p>${sigBlock(r)}</div>`;
 }
 function progressHTML(r){
- return`<div class="rc">${headBlock(r,'PROGRESS REPORT')}
+ return`<div class="rc prog">${headBlock(r,'PROGRESS REPORT')}
  <div class="meta"><div><b>Name:</b> ${esc(r.name)}</div><div><b>Age:</b> ${esc(r.age)}</div><div><b>Class:</b> ${esc(r.class)}</div><div><b>Average age of class:</b> ${esc(r.class_avg_age)}</div>
  <div><b>Weight:</b> ${esc(r.weight||'')}</div><div><b>Height:</b> ${esc(r.height||'')}</div><div><b>Report for term ending:</b> ${fdate(r.term_end_date)}</div><div><b>Next term begins:</b> ${fdate(r.resume_date)}</div></div>
- <div class="scroll"><table><tr><th style="width:34%">Subjects</th><th>Remarks</th></tr>${r.progress.map(x=>`<tr><td>${esc(x.subject)}</td><td>${esc(x.remark)}</td></tr>`).join('')}</table></div>
+ <table><colgroup><col style="width:30%"><col></colgroup><tr><th>Subjects</th><th>Remarks</th></tr>${r.progress.map(x=>`<tr><td>${esc(x.subject)}</td><td>${esc(x.remark)}</td></tr>`).join('')}</table>
  ${r.days_open?`<p><b>Attendance:</b> ${esc(r.days_present||0)} of ${esc(r.days_open)} days</p>`:''}
  <p><b>Appearance:</b> ${esc(r.appearance||'')}</p><p><b>General remarks:</b> ${esc(r.teacher_remark)}</p><p><b>Proprietress’s remark:</b> ${esc(r.head_remark)}</p>
  <p><b>Fees outstanding:</b> ${naira(r.fees_outstanding)}</p>${sigBlock(r)}</div>`;
 }
-const reportHTML=r=>r.section==='Nursery'?progressHTML(r):terminalHTML(r);
+const reportHTML=r=>`<div class="pw"><div class="paper">${r.section==='Nursery'?progressHTML(r):terminalHTML(r)}</div></div>`;
 
 /* ---------- views ---------- */
 const tabs=(list)=>`<nav class="tabs noprint">${list.map(([k,t])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-t="${k}">${t}</button>`).join('')}</nav>`;
@@ -218,7 +231,7 @@ const hero=()=>`<div class="hero"><img src="logo.png" alt="Comence logo"><h1>${e
 function vLogin(){return hero()+`<p style="text-align:center;font-weight:600;margin:0 0 12px">Please use the section that applies to you</p><div class="auth"><section class="panel stf"><div class="ph">🔐 Staff and Admin login</div><div class="pb"><p>For class teachers and the school admin only.</p>
 <label for="e">Email</label><input id="e" type="email" autocomplete="username"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password">
 <p><button class="p" data-act="login">Log in</button></p><p class="mu">Forgot your password? Contact admin to reset it.</p></div></section><div class="or"><span>or</span></div>${parentPanel()}</div>`}
-function vReport(){return`<div class="noprint"><p><button data-act="back">Back</button> <button class="p" data-act="print">Print or save as PDF</button></p>${S.exp?`<p class="mu">Please download or print this report before ${new Date(S.exp).toLocaleDateString('en-GB')}. After that it can no longer be opened.</p>`:''}</div>${S.reps.map(reportHTML).join('')}`}
+function vReport(){return`<div class="noprint"><p><button data-act="back">Back</button> <button class="p" data-act="print">Print or save as PDF</button></p><p class="mu">To print: choose paper size A4, margins Default, and turn off “Headers and footers”. Each report fits on one page.</p>${S.exp?`<p class="mu">Please download or print this report before ${new Date(S.exp).toLocaleDateString('en-GB')}. After that it can no longer be opened.</p>`:''}</div>${S.reps.map(reportHTML).join('')}`}
 
 /* teacher */
 function locked(){return T.d&&T.d.sub&&T.d.sub.status!=='draft'}
@@ -293,9 +306,14 @@ function vAdmin(){
  const t=[['reports','Reports & PINs'],['analytics','Analytics'],['data','Excel data'],['bank','Remark bank'],['sig','Signatures'],['subjects','Subjects'],['teachers','Teachers & classes'],['terms','Terms']];
  return tabs(t)+({reports:aReports,analytics:aAnalytics,data:aData,bank:aBank,sig:aSig,subjects:aSubjects,teachers:aTeachers,terms:aTerms}[S.tab]||aReports)();
 }
+const tname=id=>((D.profiles||[]).find(p=>p.id===id)||{}).full_name||'';
+const cstat=c=>{const s=(D.subs||[]).find(x=>x.class_id===c.id);return s&&s.status!=='draft'?'submitted':((D.cnt||{})[c.id]?'progress':'')};
+const clabS=c=>clab(c)+(c.teacher_id?' · '+tname(c.teacher_id):' (no teacher)')+(cstat(c)==='submitted'?' ✓ submitted':cstat(c)?' · in progress':'');
+function overviewHTML(){const rows=D.classes.filter(c=>c.teacher_id||(D.cnt||{})[c.id]),se=D.sessions.find(x=>x.id===S.asid)||{};
+ return`<div class="card"><h2>Class submissions</h2><p class="mu">${esc(se.term||'')} ${esc(se.year||'')}</p>${rows.length?`<div class="scroll"><table><tr><th>Class</th><th>Teacher</th><th>Pupils</th><th>Status</th><th></th></tr>${rows.map(c=>`<tr><td>${esc(clab(c))}</td><td>${esc(tname(c.teacher_id))||'<span class="mu">–</span>'}</td><td>${(D.cnt||{})[c.id]||0}</td><td>${cstat(c)==='submitted'?'<b class="ok">Submitted</b>':cstat(c)?'In progress':'<span class="mu">Not started</span>'}</td><td><button data-act="openclass" data-id="${c.id}" ${c.id===S.acls?'disabled':''}>${c.id===S.acls?'Showing below':'Open'}</button></td></tr>`).join('')}</table></div>`:'<p class="mu">No teacher has been assigned and no pupils have been added yet.</p>'}<p><button data-act="refresh">Refresh data</button> <span class="mu">Press this to see what teachers have entered or submitted since you logged in.</span></p></div>`}
 function aReports(){const d=D.a,ses=D.sessions.find(x=>x.id===S.asid)||{};
- const head=`<div class="card"><h2>Reports</h2><div class="row"><div><label for="as">Session and term</label><select id="as" data-ch="asid">${opts(D.sessions.map(x=>({v:x.id,t:x.term+' '+x.year})),S.asid)}</select></div>
- <div><label for="ac">Class</label><select id="ac" data-ch="acls">${opts(D.classes.map(x=>({v:x.id,t:clab(x)+(x.teacher_id?'':' (no teacher)')})),S.acls)}</select></div></div></div>`;
+ const head=overviewHTML()+`<div class="card"><h2>Reports</h2><div class="row"><div><label for="as">Session and term</label><select id="as" data-ch="asid">${opts(D.sessions.map(x=>({v:x.id,t:x.term+' '+x.year})),S.asid)}</select></div>
+ <div><label for="ac">Class</label><select id="ac" data-ch="acls">${opts(D.classes.map(x=>({v:x.id,t:clabS(x)})),S.acls)}</select></div></div></div>`;
  if(!d)return head;
  const rows=d.pupils.map(p=>({p,s:pstat(d,p,ctxFor(d,ses))})),ready=rows.filter(x=>!x.s.miss.length);
  return head+`<div class="card"><h3>${d.sub&&d.sub.status!=='draft'?'<span class="ok">Teacher has submitted</span> <button data-act="unlock">Unlock for corrections</button>':'<span class="mu">Teacher has not submitted yet</span>'}</h3>
@@ -477,13 +495,19 @@ function aBank(){const bands=['','A','B+','B','C','D','E'].map(x=>({v:x,t:x||'An
  return['teacher','proprietress'].map(k=>`<div class="card"><h2>${k==='teacher'?'Class teacher’s':'Proprietress’s'} ready-made remarks</h2><div class="scroll"><table><tr><th>Remark</th><th>Best for</th><th>In use</th></tr>
  ${D.bank.filter(b=>b.kind===k).sort((a,b)=>a.sort-b.sort).map(b=>`<tr><td style="min-width:260px"><input data-ch="bktext" data-id="${b.id}" value="${esc(b.text)}"></td><td><select data-ch="bkband" data-id="${b.id}">${opts(bands,b.band||'')}</select></td><td><input type="checkbox" data-ch="bkact" data-id="${b.id}" ${b.active?'checked':''}></td></tr>`).join('')}</table></div>
  <div class="row"><div><label>Add a remark</label><input id="nb${k}"></div><div><label>Best for</label><select id="nbb${k}">${opts(bands,'')}</select></div><div><button class="p" data-act="addbank" data-k="${k}">Add remark</button></div></div></div>`).join('')+'<p class="mu">Edits save when you leave the box. Remarks are switched off, not deleted, so old reports are never changed. Pupils’ saved remarks stay as they were written.</p>'}
+function fitReports(){const PH=(297-36)*96/25.4*0.985;
+ document.querySelectorAll('.pw').forEach(pw=>{const paper=pw.firstElementChild,rc=paper.querySelector('.rc');if(!rc)return;
+  paper.style.transform='none';rc.style.setProperty('--fit','1');const hh=rc.offsetHeight||1;rc.style.setProperty('--fit',String(Math.min(1,PH/hh)));
+  const sc=Math.min(1,(pw.parentElement.clientWidth||paper.offsetWidth)/paper.offsetWidth);
+  paper.style.transform='scale('+sc+')';pw.style.width=paper.offsetWidth*sc+'px';pw.style.height=paper.offsetHeight*sc+'px'})}
+window.addEventListener('resize',fitReports);
 function render(){
  $('#who').innerHTML=ME?`${esc(ME.full_name)} (${ME.role}) <button data-act="pw">Change password</button> <button data-act="logout">Log out</button>`:'';
  const staff=['login','teacher','admin'].includes(S.view)||(S.view==='report'&&S.from==='admin');
  $('#foot').innerHTML=staff?`This portal is powered by ${esc(C.POWERED_BY)}. For technical problems, contact ${esc(C.TECH_SUPPORT)} (staff only).`:`Powered by ${esc(C.POWERED_BY)}`;
  const v={login:vLogin,report:vReport,teacher:vTeacher,admin:vAdmin}[S.view];
  app.innerHTML=(S.msg?`<div class="msg noprint ${S.bad?'bad':''}" role="status">${esc(S.msg)}</div>`:'')+v();
- document.querySelectorAll('[data-chk]').forEach(showChk);
+ document.querySelectorAll('[data-chk]').forEach(showChk);fitReports();
 }
 
 /* ---------- actions ---------- */
@@ -530,6 +554,8 @@ const ACT={
   if((prompt('This permanently deletes all '+n+' pupils in '+clab(c)+' with their scores, remarks, PINs, submission status and signature. Export to Excel first.\n\nType DELETE to confirm:')||'').trim()!=='DELETE')return flash('Nothing was deleted.');
   await q(sb.from('submissions').delete().eq('class_id',c.id));await q(sb.from('teacher_signatures').delete().eq('class_id',c.id));
   const all=await q(sb.from('pupils').select('id').eq('class_id',c.id));if(all.length)await q(sb.from('pupils').delete().eq('class_id',c.id));D.an=null;await aLoad();flash(clab(c)+' cleared: '+all.length+' pupils deleted.')},
+ async openclass(b){S.acls=b.dataset.id;await aLoad();render();window.scrollTo(0,document.body.scrollHeight>0?400:0)},
+ async refresh(){await aInit();flash('Refreshed.')},
  async sign(){const n=val('sgn');if(!n)return flash('Type the name to sign with.',true);await q(sb.from('teacher_signatures').upsert({class_id:D.my.id,session_id:T.sid,typed_name:n},{onConflict:'class_id,session_id'}));await tInit();flash('Signed.')},
  async rmsig(){await q(sb.from('teacher_signatures').update({image:null}).eq('class_id',S.acls).eq('session_id',S.asid));await aLoad();flash('Signature image removed.')},
  async rmpsig(){await q(sb.from('settings').delete().eq('key','proprietress_signature'));D.psig='';flash('Signature removed.')},

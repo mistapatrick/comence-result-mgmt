@@ -120,3 +120,10 @@ delete from pupils             where class_id in (select id from classes where l
 ```
 Deleting pupils automatically deletes their scores, subject ticks, remarks, progress remarks and PINs.
 - **Admin class results sheet:** the Reports & PINs tab now shows a full results table for the chosen class and term (the same summary the teacher sees). "View report" and "Generate PIN" stay greyed until every compulsory item is present; the line "Still needed" under each pupil says which.
+- **Admin Reports & PINs tab opens on a class that has been submitted** (or has pupils), and a **Class submissions** table at the top lists every class that has a teacher or pupils, with the teacher, number of pupils and status. Press **Open** on a class to see it, and **Refresh data** to pick up what teachers entered after you logged in. The class dropdown also shows each class's teacher and a "✓ submitted" tick.
+
+## Printing report cards (A4, one page each)
+- Every terminal report and progress report is laid out as one A4 page with wide margins (20 mm left and right, 18 mm top and bottom). Up to 14 subjects fit; if a report has unusually long remarks, the page shrinks very slightly so it still stays on one sheet.
+- To print: open the report, press **Print or save as PDF**, choose paper size **A4**, margins **Default**, and turn **off** "Headers and footers" (and leave scale at 100%). "Print all ready reports" prints one pupil per page.
+- CA, Exam, Total, Class avg, grand total and the averages always show three decimal places (for example 35.000).
+- On a phone or tablet the report shows as a scaled-down A4 sheet; pinch to zoom, or use Print > Save as PDF.
