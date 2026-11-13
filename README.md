@@ -1,11 +1,10 @@
 # Comence Results Portal (proof of concept, 1st Term 2026/2027)
 
-> ## Already running the first version? Start here (do not reinstall)
+> ## Already running an earlier version? Start here (do not reinstall)
 > Your database, admin login, Supabase keys and Vercel settings stay exactly as they are. Do not run `schema.sql` again and do not delete anything.
-> 1. Supabase > SQL Editor > New query: paste all of `supabase/update-2-signatures-remarks.sql` and Run (choose "Run and enable RLS" if asked).
-> 2. New query: paste all of `supabase/update-3-classes-progress-dob.sql` and Run. Update 3 needs update 2 first. It renames your existing classes in place and lists them at the end.
-> 3. Push `index.html`, `README.md` and the two `.sql` files to GitHub. Leave your own `config.js` alone. Vercel redeploys by itself.
-> 4. Hard-refresh the site (Ctrl+Shift+R) and log in as admin. The sections "Update 3" and "Update 4" below describe what is new.
+> 1. Supabase > SQL Editor: run, **in this order and only the ones you have not run yet**, each file once (paste all of it, Run, choose "Run and enable RLS" if asked): `update-2-signatures-remarks.sql`, `update-3-classes-progress-dob.sql`, `update-4-tie-positions.sql`, `update-5-accounts.sql`, `update-6-roster.sql`.
+> 2. Straight after the last SQL, push `index.html`, `api/teachers.js`, `README.md` and the new `.sql` files to GitHub. Leave your own `config.js` alone. Vercel redeploys by itself. (Push soon after update 6: the old screens do not know about the roster.)
+> 3. Hard-refresh the site (Ctrl+Shift+R) and log in as admin. The sections "Update 3" to "Update 7" below describe what is new.
 >
 > Everything from "Step 1" to "Step 4" is the **first-time installation guide**, only for a brand-new setup.
 
@@ -21,6 +20,8 @@ Teachers log in, set their class and term, add pupils, tick the subjects each pu
 | `api/teachers.js` | Lets the admin create teacher logins and reset passwords |
 | `supabase/schema.sql` | The database, grading, subjects, security rules, PIN logic. Run first. |
 | `supabase/update-2-signatures-remarks.sql` | **Run second.** Signatures, class averages, preset remarks, free class names |
+| `supabase/update-6-roster.sql` | **Run sixth.** School roster per term: promotion, repetition, admission numbers by year |
+| `supabase/update-5-accounts.sql` | **Run fifth.** Super admin level above ordinary admins |
 | `supabase/update-4-tie-positions.sql` | **Run fourth.** Tied positions (1st, 1st, 3rd) decided on the 3-decimal average |
 | `supabase/update-3-classes-progress-dob.sql` | **Run third.** Real class names, Nursery progress reports, date of birth and ages, 3-decimal scores, safe admission numbers |
 | `vercel.json`, `package.json`, `.gitignore` | Hosting settings |
@@ -69,7 +70,7 @@ git push -u origin main
 **Admin**
 1. Log in. **Terms** tab: set "Next term begins" for 1st Term 2026/2027 (compulsory on reports).
 2. **Subjects** tab: check or rename subjects if needed.
-3. **Teachers & classes** tab: create each teacher's login (name, email, starting password), then assign classes (or let teachers pick their own class in step 1 of their screen).
+3. **Accounts & classes** tab: create each teacher's login (name, email, starting password), then assign classes (or let teachers pick their own class in step 1 of their screen).
 4. **Reports & PINs** tab, after teachers submit: add the proprietress's remark and fees outstanding (0 if none) for each pupil, then **View / print report** or **Generate PIN**. Choose how long the PIN stays valid (7 to 45 days). The PIN is shown once.
 5. Give parents the website address, their child's Admission Number and the PIN (they use the Parents section of the login page), or use "Email this to the parent". **Print all ready reports** makes one page per pupil (choose "Save as PDF" to keep a file).
 
@@ -131,3 +132,42 @@ Deleting pupils automatically deletes their scores, subject ticks, remarks, prog
 
 ## Update 5: tied positions (run `supabase/update-4-tie-positions.sql` once)
 Pupils with the same average share a position and the next position is skipped, British style: two pupils tied 1st are followed by 3rd; three tied 4th are followed by 7th. Ties are decided on the average shown to three decimal places, so two pupils who both show 80.000 always share a position. This applies to report cards, the teacher's check summary and Analytics.
+
+## Update 6: super admin and admin accounts (run `supabase/update-5-accounts.sql` once, BEFORE pushing the new files)
+- **Super admin** (your existing admin account): sees and does everything, creates and deletes **Admin and Teacher** accounts, resets any other account's password.
+- **Admin** (for example the proprietress): sees everything and does everything the super admin does in the portal (reports, PINs, signatures, subjects, terms, remark bank, analytics, Excel, deleting pupils). In **Accounts & classes** she can create, reset and delete **Teacher** accounts only.
+- **Protected:** nobody can delete the super admin, and nobody can delete their own account. An ordinary admin cannot create, reset or delete other admins. The super admin password is changed only by the super admin (Change password).
+- **How to add the proprietress:** log in as super admin > Accounts & classes > Create an account > choose **Admin** > give her name, email and a starting password.
+- The update marks your earliest existing admin as the super admin and checks it at the end of the script (the `is_super` column should show `t` for you only). To make a different account the super admin, in the SQL Editor: `update profiles set is_super = false; update profiles set is_super = true where email = 'THE-EMAIL';`
+- Accounts can no longer be edited straight from the browser, only through the portal's server function, so a copied admin login cannot promote itself.
+- Only two account types exist today (Admin and Teacher). If the school needs other staff types (for example a bursar who sees fees only), tell me what each should see and do.
+
+## Update 7: school roster, promotion and repetition (run `supabase/update-6-roster.sql` once)
+**What changed:** every pupil now belongs to a class *per term* (the roster). Old report cards keep the class and class averages of that term even after a pupil is promoted. Existing pupils are placed in their current class for every existing term, and existing terms stay unlocked so your testing continues.
+
+**Admission numbers** follow the year of the term in which the pupil is admitted: 2026/2027 gives CNP/26/0001, CNP/26/0002…, and 2027/2028 starts again at CNP/27/0001. Numbers are made by the portal when pupils are added (teacher, admin) and never repeat. Existing numbers are kept.
+
+**Launch (1st Term 2026/2027):** in the Terms tab make sure “Roster open to teachers” is ticked. Each teacher goes to step 2 Pupils and adds the class (name, date of birth). You can also add pupils yourself: School roster tab > Add new pupils (admin-confirmed admissions). Those wait in their class for the teacher to admit them.
+
+**Pupils stay in their class for all three terms of a session. Promotion and repetition happen only from one session to the next.**
+
+*Within a session (2nd and 3rd Term):*
+1. Terms tab: add the new term. The portal asks "Carry all pupils from the previous term into this one?" Answer OK and everyone stays in the same class, already admitted (no teacher action). You can also do it later from School roster > choose the term > **Carry … pupil(s) forward into the same classes**.
+2. Only if a teacher needs to add a late arrival, unlock that term's roster (it is locked by default for new terms).
+
+*Into a new session (promotion and repetition):*
+1. Terms tab: add **1st Term** of the new session (for example 2027/2028).
+2. School roster tab: *Term to prepare* = that 1st Term, *Take pupils from* = the **3rd Term** of the session just ended (the portal warns if you pick another term).
+3. For each pupil, decide **Promote to a named class** (for example Primary 1 Alpha to Amazon or Benue), **Repeat** the class, or **Leaves school** (Primary 6 leavers, withdrawals). A whole class can be set at once. Under each name you see the session average (the average of that session's term averages), the last term's average, a red "below 40" flag, and the proprietress's remark from the last term (where she can record her recommendation), to support the decision. Press **Place these pupils**.
+4. Add any new admissions in the same tab, then **unlock the roster** for the new term.
+5. Class teachers open step 2 Pupils and see "Waiting to join [class]": promoted pupils, repeaters and pupils you added. They press **Admit** (or **Admit all**) for those present, and can add other new pupils. Only admitted pupils appear in scores, summaries and reports.
+6. Lock the roster again when admissions are done.
+
+**Rules:** a teacher can only admit or remove pupils while the term's roster is unlocked, only for their own class, and cannot change a pupil's class or admission number. “Remove” takes a pupil out of that term's class list only (the admin can still see them under “Removed” counts). The class teacher assignments (Accounts & classes tab) are not per term, so reassign a class teacher there when a teacher changes class.
+
+**Excel:** export now has a `Roster` sheet (pupil, term, class, status) and the Pupils sheet no longer has a class. Import reads the same layout.
+
+**Analytics** uses each term's real class list for the class you choose. A promoted pupil's earlier terms are still compared; the earlier class average is taken over today's classmates.
+
+## Remarks follow the Grand total grade
+Ready-made remarks offered to the class teacher and the proprietress are limited to the pupil's **Grand total grade**, the grade in the last row of the report card's Grade column. A B+ pupil sees only B+ remarks; a pupil with no scores yet is asked to enter the scores first. Nursery progress reports use the “Any grade” remarks. In the Remark bank, give each grade several remarks so there is always a choice. The grade is worked out from the average shown to three decimals, so what the teacher sees matches the report.
