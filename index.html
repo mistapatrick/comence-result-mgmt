@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Comence Results Portal</title>
 <link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <style>
 :root{--bg:#eef1f7;--bg2:#dbe4f4;--card:#fff;--card2:#f3f6fb;--tx:#18233a;--mu:#5b667a;--bd:#d3dae6;--gold:#c8891a;--ok:#1b7a43;--bad:#b3261e;--in:#fff;
 --g1:#3d5fa8;--g2:#1f3263;--g3:#142243;--b1:#fff;--b2:#e4e9f3;--bb:#b6c1d6;--gl:rgba(255,255,255,.75);--sh:0 1px 2px rgba(16,24,40,.08),0 10px 28px rgba(16,24,40,.10);
@@ -81,16 +82,23 @@ details.pup summary{cursor:pointer}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @page{size:A4;margin:18mm 20mm}
 @media print{.noprint,header.top,.foot{display:none!important}body{background:#fff}main{padding:0;max-width:none}.pw{width:auto!important;height:auto!important;margin:0;overflow:visible;break-after:page;page-break-after:always}.pw:last-child{break-after:auto;page-break-after:auto}.paper{transform:none!important;width:170mm;padding:0;box-shadow:none;border-radius:0}}
+body.busy::before{content:"";position:fixed;left:0;top:0;height:3px;width:100%;z-index:60;background:linear-gradient(90deg,transparent,var(--gold),transparent);background-size:50% 100%;background-repeat:no-repeat;animation:busy 1s linear infinite}
+@keyframes busy{from{background-position:-60% 0}to{background-position:160% 0}}
+#idlewarn{display:none;position:fixed;top:10px;left:10px;right:10px;z-index:70;max-width:560px;margin:0 auto;text-align:center}
+@media (prefers-reduced-motion:reduce){body.busy::before{animation:none;background:var(--gold)}}
 </style>
 </head>
 <body>
 <header class="top"><img src="logo.png" alt="Comence logo"><b>Comence Nursery &amp; Primary School · Results Portal</b><span id="who"></span></header>
+<div id="idlewarn" class="msg noprint" role="alert"></div>
 <main id="app"></main>
 <div class="foot" id="foot"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script>
+(function(){if(!window.fetch)return;const f=window.fetch.bind(window);let n=0;window.fetch=function(){n++;document.body.classList.add('busy');return f.apply(null,arguments).finally(()=>{if(--n<=0){n=0;document.body.classList.remove('busy')}})}})();
 const C=window.APP_CONFIG;C.POWERED_BY=C.POWERED_BY||'Business Labs Software and Technology';C.TECH_SUPPORT=C.TECH_SUPPORT||'09053903530';const sb=supabase.createClient(C.SUPABASE_URL,C.SUPABASE_ANON_KEY);
+try{const l=document.createElement('link');l.rel='preconnect';l.href=C.SUPABASE_URL;document.head.appendChild(l)}catch(e){}
 const $=s=>document.querySelector(s),app=$('#app');
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const LEVELS=['Playgroup','Playgroup II','Pre-Nursery','Pre-Nursery II','Nursery 1','Nursery 2','Primary 1','Primary 2','Primary 3','Primary 4','Primary 5','Primary 6'];
@@ -135,14 +143,12 @@ const flash=(m,bad)=>{S.msg=m;S.bad=!!bad;render();window.scrollTo(0,0)};
 
 /* ---------- loading ---------- */
 async function loadClass(cid,sid,level){
- const nur=sectionOf(level)==='Nursery';
- const rr=await q(sb.from('roster').select('status,source,pupils(*)').eq('class_id',cid).eq('session_id',sid)),byName=(a,b)=>a.full_name.localeCompare(b.full_name),pick=st=>rr.filter(x=>x.status===st&&x.pupils).map(x=>({...x.pupils,_src:x.source})).sort(byName);
+ const nur=sectionOf(level)==='Nursery',one=async p=>(await p).data;
+ const [rr,subjects,sub,sig]=await Promise.all([q(sb.from('roster').select('status,source,pupils(*)').eq('class_id',cid).eq('session_id',sid)),q(sb.from('subjects').select('*').eq('section',sectionOf(level)).eq('active',true).order('sort')),one(sb.from('submissions').select('*').eq('class_id',cid).eq('session_id',sid).maybeSingle()),one(sb.from('teacher_signatures').select('*').eq('class_id',cid).eq('session_id',sid).maybeSingle())]);
+ const byName=(a,b)=>a.full_name.localeCompare(b.full_name),pick=st=>rr.filter(x=>x.status===st&&x.pupils).map(x=>({...x.pupils,_src:x.source})).sort(byName);
  const pupils=pick('admitted'),pending=pick('pending'),removed=pick('removed');
- const subjects=await q(sb.from('subjects').select('*').eq('section',sectionOf(level)).eq('active',true).order('sort'));
  const ids=pupils.map(p=>p.id);let en=[],sc=[],rm=[],pr=[];
  if(ids.length)[en,sc,rm,pr]=await Promise.all([q(sb.from('pupil_subjects').select('*').eq('session_id',sid).in('pupil_id',ids)),nur?[]:q(sb.from('scores').select('*').eq('session_id',sid).in('pupil_id',ids)),q(sb.from('remarks').select('*').eq('session_id',sid).in('pupil_id',ids)),nur?q(sb.from('progress_remarks').select('*').eq('session_id',sid).in('pupil_id',ids)):[]]);
- const sub=(await sb.from('submissions').select('*').eq('class_id',cid).eq('session_id',sid).maybeSingle()).data;
- const sig=(await sb.from('teacher_signatures').select('*').eq('class_id',cid).eq('session_id',sid).maybeSingle()).data;
  const E={},Sc={},R={},PR={};en.forEach(x=>E[x.pupil_id+'|'+x.subject_id]=1);sc.forEach(x=>Sc[x.pupil_id+'|'+x.subject_id]={ca:x.ca,exam:x.exam});rm.forEach(x=>R[x.pupil_id]=x);pr.forEach(x=>PR[x.pupil_id+'|'+x.subject_id]=x.remark);
  return{pupils,pending,removed,subjects,E,Sc,R,PR,sub,sig,level};
 }
@@ -167,26 +173,35 @@ function bankOpts(kind,avg,nur){const all=(D.bank||[]).filter(b=>b.kind===kind&&
 function fileToSig(f){return new Promise((res,rej)=>{if(!f||!/^image\/(png|jpeg)$/.test(f.type))return rej(new Error('Choose a PNG or JPG image.'));if(f.size>3e6)return rej(new Error('Image is too large (maximum 3 MB).'));
  const im=new Image(),u=URL.createObjectURL(f);im.onload=()=>{const k=Math.min(1,600/im.width,200/im.height),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',0.85))};im.onerror=()=>rej(new Error('Could not read that image.'));im.src=u})}
 async function tInit(){
- D.sessions=await q(sb.from('sessions').select('*').order('year',{ascending:false}).order('term'));
- const cl=await q(sb.from('classes').select('*').eq('teacher_id',ME.id));D.my=cl[0]||null;
- D.bank=await q(sb.from('remark_bank').select('*').order('sort'));D.free=(await q(sb.from('classes').select('*').is('teacher_id',null))).sort((a,b)=>LEVELS.indexOf(a.level)-LEVELS.indexOf(b.level)||a.arm.localeCompare(b.arm));
+ const [sess,cl,bank,free]=await Promise.all([q(sb.from('sessions').select('*').order('year',{ascending:false}).order('term')),q(sb.from('classes').select('*').eq('teacher_id',ME.id)),q(sb.from('remark_bank').select('*').order('sort')),q(sb.from('classes').select('*').is('teacher_id',null))]);
+ D.sessions=sess;D.my=cl[0]||null;D.bank=bank;D.free=free.sort((a,b)=>LEVELS.indexOf(a.level)-LEVELS.indexOf(b.level)||a.arm.localeCompare(b.arm));
  T.sid=(D.sessions.find(x=>x.id===localStorage.getItem('sid'))||D.sessions[0]||{}).id;
  if(D.my&&T.sid)T.d=await loadClass(D.my.id,T.sid,D.my.level);
 }
 async function aInit(){
- D.sessions=await q(sb.from('sessions').select('*').order('year',{ascending:false}).order('term'));
- D.classes=await q(sb.from('classes').select('*'));D.classes.sort((a,b)=>LEVELS.indexOf(a.level)-LEVELS.indexOf(b.level)||a.arm.localeCompare(b.arm));
- D.profiles=await q(sb.from('profiles').select('*').order('full_name'));
- D.allsub=await q(sb.from('subjects').select('*').order('sort'));
- D.bank=await q(sb.from('remark_bank').select('*').order('sort'));D.psig=((await sb.from('settings').select('value').eq('key','proprietress_signature').maybeSingle()).data||{}).value||'';
+ const one=async p=>(await p).data;
+ const [sess,cls,prof,allsub,bank,ps]=await Promise.all([q(sb.from('sessions').select('*').order('year',{ascending:false}).order('term')),q(sb.from('classes').select('*')),q(sb.from('profiles').select('*').order('full_name')),q(sb.from('subjects').select('*').order('sort')),q(sb.from('remark_bank').select('*').order('sort')),one(sb.from('settings').select('value').eq('key','proprietress_signature').maybeSingle())]);
+ D.sessions=sess;D.classes=cls.sort((a,b)=>LEVELS.indexOf(a.level)-LEVELS.indexOf(b.level)||a.arm.localeCompare(b.arm));D.profiles=prof;D.allsub=allsub;D.bank=bank;D.psig=(ps||{}).value||'';
  S.asid=S.asid||(chron().pop()||{}).id;await aOver();
- S.acls=S.acls||(D.classes.find(c=>D.subs.some(s=>s.class_id===c.id&&s.status!=='draft'))||D.classes.find(c=>D.cnt[c.id])||D.classes[0]||{}).id;await aLoad();
+ S.acls=S.acls||(D.classes.find(c=>D.subs.some(s=>s.class_id===c.id&&s.status!=='draft'))||D.classes.find(c=>D.cnt[c.id])||D.classes[0]||{}).id;await aLoad(true);
  S.an=S.an||{cls:((D.classes.find(c=>sectionOf(c.level)==='Primary'&&D.cnt[c.id])||D.classes.find(c=>sectionOf(c.level)==='Primary')||D.classes[0])||{}).id,sid:(chron().pop()||{}).id,cmp:'',mode:'class',pid:''};
 }
-async function aOver(){D.subs=await q(sb.from('submissions').select('*').eq('session_id',S.asid));const rs=await fetchAll(()=>sb.from('roster').select('pupil_id,class_id,status').eq('session_id',S.asid).order('pupil_id'));D.cnt={};D.pend={};rs.forEach(r=>{if(r.status==='admitted')D.cnt[r.class_id]=(D.cnt[r.class_id]||0)+1;else if(r.status==='pending')D.pend[r.class_id]=(D.pend[r.class_id]||0)+1})}
-async function aLoad(){await aOver();const c=D.classes.find(x=>x.id===S.acls);D.a=(c&&S.asid)?await loadClass(c.id,S.asid,c.level):null}
+async function aOver(){const [subs,rs]=await Promise.all([q(sb.from('submissions').select('*').eq('session_id',S.asid)),fetchAll(()=>sb.from('roster').select('pupil_id,class_id,status').eq('session_id',S.asid).order('pupil_id'))]);D.subs=subs;D.cnt={};D.pend={};rs.forEach(r=>{if(r.status==='admitted')D.cnt[r.class_id]=(D.cnt[r.class_id]||0)+1;else if(r.status==='pending')D.pend[r.class_id]=(D.pend[r.class_id]||0)+1})}
+async function aLoad(skipOver){const c=D.classes.find(x=>x.id===S.acls);const [,a]=await Promise.all([skipOver?null:aOver(),(c&&S.asid)?loadClass(c.id,S.asid,c.level):null]);D.a=a}
+const IDLE_MS=(Number(C.IDLE_MINUTES)||30)*60000,WARN_MS=IDLE_MS-2*60000;
+let lastAct=Date.now(),lastW=0;
+function touch(){const n=Date.now();lastAct=n;if(n-lastW>10000){lastW=n;try{localStorage.setItem('cnp_last',String(n))}catch(e){}}const w=document.getElementById('idlewarn');if(w&&w.style.display==='block')w.style.display='none'}
+['click','keydown','input','touchstart','scroll','mousemove'].forEach(ev=>window.addEventListener(ev,touch,{passive:true,capture:true}));
+const lastSeen=()=>{let v=lastAct;try{v=Math.max(v,Number(localStorage.getItem('cnp_last'))||0)}catch(e){}return v};
+async function idleCheck(){const idle=Date.now()-lastSeen(),w=document.getElementById('idlewarn');
+ if(ME&&idle>=IDLE_MS){await ACT.logout();S.msg='You were logged out after '+(IDLE_MS/60000)+' minutes of inactivity. Please log in again.';S.bad=false;render();if(w)w.style.display='none';return}
+ if(!ME&&S.view==='report'&&S.from==='parent'&&idle>=IDLE_MS){S.reps=[];S.view='login';S.msg='The report was closed after '+(IDLE_MS/60000)+' minutes of inactivity.';render();return}
+ if(ME&&idle>=WARN_MS&&w){w.textContent='You will be logged out in about 2 minutes because there has been no activity. Click or press any key to stay logged in.';w.style.display='block'}}
+setInterval(idleCheck,15000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)idleCheck()});
 async function boot(){
- const {data:{session}}=await sb.auth.getSession();
+ let {data:{session}}=await sb.auth.getSession();
+ const stamp=Number(localStorage.getItem('cnp_last'))||0;if(session&&!stamp)touch();
+ if(session&&stamp&&Date.now()-stamp>=IDLE_MS){await sb.auth.signOut();session=null;S.msg='You were logged out after '+(IDLE_MS/60000)+' minutes of inactivity. Please log in again.'}
  if(!session){S.view='login';return render()}
  const p=await q(sb.from('profiles').select('*').eq('id',session.user.id).single());ME=p;
  if(p.role==='admin'){S.view='admin';S.tab='reports';await aInit()}else{S.view='teacher';S.tab='setup';await tInit()}
@@ -607,11 +622,11 @@ const ACT={
  print(){window.print()},
  async addsub(b){const sec=b.dataset.sec,n=val('ns'+sec);if(!n)return;const mx=Math.max(0,...D.allsub.filter(s=>s.section===sec).map(s=>s.sort));
   await q(sb.from('subjects').insert({section:sec,name:n,sort:mx+1}));await aInit();flash('Subject added.')},
- async mkaccount(){try{await api({action:'create',full_name:val('tn'),email:val('te'),password:val('tp'),role:val('tr')});await aInit();flash('Account created.')}catch(e){flash(e.message,true)}},
+ async mkaccount(){try{await api({action:'create',full_name:val('tn'),email:val('te'),password:val('tp'),role:val('tr')});D.profiles=await q(sb.from('profiles').select('*').order('full_name'));flash('Account created.')}catch(e){flash(e.message,true)}},
  async resetpw(b){const p=D.profiles.find(x=>x.id===b.dataset.id),pw=prompt('New password for '+(p?p.full_name:'this account')+' (8 or more characters):');if(!pw)return;
   try{await api({action:'reset',user_id:b.dataset.id,password:pw});flash('Password reset. Give the person the new password.')}catch(e){flash(e.message,true)}},
  async delaccount(b){const p=D.profiles.find(x=>x.id===b.dataset.id);if(!p||!confirm('Permanently delete the account of '+p.full_name+' ('+p.email+')? They will no longer be able to log in. This cannot be undone.'))return;
-  try{await api({action:'delete',user_id:p.id});await aInit();flash('Account deleted.')}catch(e){flash(e.message,true)}},
+  try{await api({action:'delete',user_id:p.id});D.profiles=D.profiles.filter(x=>x.id!==p.id);D.classes.forEach(c=>{if(c.teacher_id===p.id)c.teacher_id=null});flash('Account deleted.')}catch(e){flash(e.message,true)}},
  async addterm(){const y=val('ny');if(!y)return;const id=await q(sb.rpc('ensure_session',{y,t:val('nt')}));await aInit();
   const me=D.sessions.find(s=>s.id===id),prev=me&&chron().filter(s=>s.year===me.year&&s.term<me.term&&s.id!==id).pop();
   if(prev&&confirm('Carry all pupils from '+prev.term+' '+prev.year+' into '+me.term+' '+me.year+' now? They stay in the same classes for the whole session.')){const n=await carryForward(prev.id,id);return flash('Term added. '+n+' pupils carried forward into the same classes.')}
@@ -660,13 +675,13 @@ const CH={
  async asid(t){S.asid=t.value;await aLoad();render()},async acls(t){S.acls=t.value;await aLoad();render()},
  async subname(t){await q(sb.from('subjects').update({name:t.value.trim()}).eq('id',t.dataset.id))},
  async subact(t){await q(sb.from('subjects').update({active:t.checked}).eq('id',t.dataset.id))},
- async assign(t){await q(sb.from('classes').update({teacher_id:t.value||null}).eq('id',t.dataset.id));await aInit();render()},
- async resume(t){await q(sb.from('sessions').update({resume_date:t.value||null}).eq('id',t.dataset.id));await aInit();render()},
+ async assign(t){await q(sb.from('classes').update({teacher_id:t.value||null}).eq('id',t.dataset.id));const c=D.classes.find(x=>x.id===t.dataset.id);if(c)c.teacher_id=t.value||null;render()},
+ async resume(t){await q(sb.from('sessions').update({resume_date:t.value||null}).eq('id',t.dataset.id));const s=D.sessions.find(x=>x.id===t.dataset.id);if(s)s.resume_date=t.value||null;render()},
  async xlfile(t){if(!t.files[0])return;try{const r=await parseImport(t.files[0]);S.im=r;S.imKeys=r.keys;render()}catch(e){flash(e.message,true)}},
  async an(t){S.an[t.dataset.k]=t.value;if(t.dataset.k==='cls'||t.dataset.k==='sid'){if(t.dataset.k==='cls')S.an.pid='';await anLoad()}render()},
  async dob(t){await q(sb.from('pupils').update({dob:t.value||null}).eq('id',t.dataset.id));const p=T.d.pupils.find(x=>x.id===t.dataset.id);if(p)p.dob=t.value||null},
- async endd(t){await q(sb.from('sessions').update({end_date:t.value||null}).eq('id',t.dataset.id));await aInit();render()},
- async rostopen(t){await q(sb.from('sessions').update({roster_open:t.checked}).eq('id',t.dataset.id));await aInit();render()},
+ async endd(t){await q(sb.from('sessions').update({end_date:t.value||null}).eq('id',t.dataset.id));const s=D.sessions.find(x=>x.id===t.dataset.id);if(s)s.end_date=t.value||null;render()},
+ async rostopen(t){await q(sb.from('sessions').update({roster_open:t.checked}).eq('id',t.dataset.id));const s=D.sessions.find(x=>x.id===t.dataset.id);if(s)s.roster_open=t.checked;render()},
  async rsel(t){S.rs[t.dataset.k]=t.value;if(t.dataset.k==='to'&&S.rs.from===t.value)S.rs.from='';await rsLoad();render()},
  rsbatch(t){if(!t.value)return;const R=S.rs,cid=t.dataset.cid,ex=new Map(D.rs.to.map(x=>[x.pupil_id,x]));D.rs.from.filter(x=>x.status==='admitted'&&x.class_id===cid).forEach(x=>{const e=ex.get(x.pupil_id);if(!e||e.status==='pending')R.mv[x.pupil_id]=t.value});render()},
  rsmv(t){S.rs.mv[t.dataset.id]=t.value},
