@@ -2,7 +2,7 @@
 
 > ## Already running an earlier version? Start here (do not reinstall)
 > Your database, admin login, Supabase keys and Vercel settings stay exactly as they are. Do not run `schema.sql` again and do not delete anything.
-> 1. Supabase > SQL Editor: run, **in this order and only the ones you have not run yet**, each file once (paste all of it, Run, choose "Run and enable RLS" if asked): `update-2-signatures-remarks.sql`, `update-3-classes-progress-dob.sql`, `update-4-tie-positions.sql`, `update-5-accounts.sql`, `update-6-roster.sql`.
+> 1. Supabase > SQL Editor: run, **in this order and only the ones you have not run yet**, each file once (paste all of it, Run, choose "Run and enable RLS" if asked): `update-2-signatures-remarks.sql`, `update-3-classes-progress-dob.sql`, `update-4-tie-positions.sql`, `update-5-accounts.sql`, `update-6-roster.sql`, `update-7-security.sql`.
 > 2. Straight after the last SQL, push `index.html`, `api/teachers.js`, `README.md` and the new `.sql` files to GitHub. Leave your own `config.js` alone. Vercel redeploys by itself. (Push soon after update 6: the old screens do not know about the roster.)
 > 3. Hard-refresh the site (Ctrl+Shift+R) and log in as admin. The sections "Update 3" to "Update 7" below describe what is new.
 >
@@ -14,12 +14,14 @@ Teachers log in, set their class and term, add pupils, tick the subjects each pu
 ## Files
 | File | What it is |
 |---|---|
-| `index.html` | The whole app (teacher, admin, parent screens) |
+| `index.html`, `app.js`, `style.css` | The whole app (teacher, admin, parent screens). All three must be pushed together |
+| `SECURITY_AUDIT.md` | Security audit report, findings and your checklist |
 | `config.js` | **You edit this**: Supabase address and public key, school contacts |
 | `logo.png` | School logo (used on screens and report cards) |
 | `api/teachers.js` | Lets the admin create teacher logins and reset passwords |
 | `supabase/schema.sql` | The database, grading, subjects, security rules, PIN logic. Run first. |
 | `supabase/update-2-signatures-remarks.sql` | **Run second.** Signatures, class averages, preset remarks, free class names |
+| `supabase/update-7-security.sql` | **Run seventh.** Security hardening (approval gate, locked-down functions, safer parent portal) |
 | `supabase/update-6-roster.sql` | **Run sixth.** School roster per term: promotion, repetition, admission numbers by year |
 | `supabase/update-5-accounts.sql` | **Run fifth.** Super admin level above ordinary admins |
 | `supabase/update-4-tie-positions.sql` | **Run fourth.** Tied positions (1st, 1st, 3rd) decided on the 3-decimal average |
@@ -36,7 +38,7 @@ Cost: GitHub, Vercel Hobby and Supabase Free are all free for this proof of conc
 3. **Create the admin login:** Authentication > Users > **Add user > Create new user**. Enter the admin email and password and tick **Auto Confirm User**.
 4. **Make that user the admin:** SQL Editor, run (use the admin's email):
 ```
-update profiles set role = 'admin' where email = 'ADMIN-EMAIL-HERE';
+update profiles set role = 'admin', is_super = true, active = true where email = 'ADMIN-EMAIL-HERE';
 ```
 5. **Collect three values** (Project Settings > API):
    - Project URL
@@ -179,3 +181,11 @@ Ready-made remarks offered to the class teacher and the proprietress are limited
 - **Speed:** a thin gold bar at the top of the page shows while the portal is waiting for the server. Screens now load their data at the same time instead of one request after another (the admin start-up went from about 15 requests in a row to about 4 steps), and creating, deleting or assigning accounts, class teachers and term dates only refreshes what changed.
 - **Biggest remaining speed-up (a Vercel setting):** the account function runs in Washington, USA by default, while your Supabase database is in Ireland. In Vercel: Project > **Settings > Functions > Function Region**, choose **Dublin, Ireland (dub1)** and redeploy. This removes two trips across the Atlantic from every account action.
 - Other causes of delay that code cannot remove: the distance between Nigeria and the Supabase server, and mobile network quality. Moving the database to another region means creating a new project, which is not worth it now.
+
+## Update 9: security audit and hardening (read `SECURITY_AUDIT.md`)
+1. **Before** running the SQL: Supabase > Authentication > Users, delete any account you do not recognise (update 7 approves everyone who exists at that moment).
+2. Run `supabase/update-7-security.sql` once.
+3. Straight after, push **`index.html`, `app.js`, `style.css`, `api/teachers.js`, `vercel.json`**, `README.md`, `SECURITY_AUDIT.md` and the new `.sql` file. Leave your own `config.js` alone. The page now keeps its code in `app.js` and `style.css`, so all three files must be pushed together.
+4. Supabase > Authentication > Sign In / Providers: switch off "Allow new users to sign up". Tick off the rest of the checklist in `SECURITY_AUDIT.md`.
+5. Teachers choose their term from a list (only the admin creates terms). Passwords are now at least 10 characters and typed in a masked box. New accounts made by the portal are approved automatically; an account made any other way (for example in the Supabase dashboard) must be approved with: `update profiles set active = true where email = 'THE-EMAIL';`
+6. If something looks broken after the push, open the browser console (F12) and send me the first red message. The new security policy blocks anything it does not recognise.
